@@ -19,7 +19,12 @@ before_script:
 
 stages:
     - test
+    - run
 
 test:
     script:
         - $BINDIR/$TESTEXEC --verbose=0
+
+run:
+    script:
+        - echo

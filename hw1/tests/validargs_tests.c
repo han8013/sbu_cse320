@@ -64,7 +64,7 @@ Test(ValidArgs_Suite, subs_decr_n){
 
     int n = 3452;
 
-    cr_assert_eq((mode & NVAL), n % 26, "n value expected to be %d was %d", n % 26, (mode & NVAL));
+    cr_assert_eq((mode & NVAL), n % (strlen(Alphabet)), "n value expected to be %d was %d", (int)(n % (strlen(Alphabet))), (mode & NVAL));
 }
 
 Test(ValidArgs_Suite, subs_encr){
@@ -90,8 +90,8 @@ Test(ValidArgs_Suite, subs_encr_n){
 
     int n = 3425;
 
-    cr_assert_eq((mode & NVAL), n % 26, "n value expected to be %d was %d",
-                 n % 26, (mode & NVAL));
+    cr_assert_eq((mode & NVAL), n % (strlen(Alphabet)), "n value expected to be %d was %d",
+                (int)(n % (strlen(Alphabet))), (mode & NVAL));
 }
 
 Test(ValidArgs_Suite, tuts_encr){
@@ -104,7 +104,7 @@ Test(ValidArgs_Suite, tuts_encr){
     cr_assert_eq((mode & TUTE), 0, "Tutense bit wasn't zero, got %s ", byte_to_binary(mode));
     cr_assert_eq((mode & ENCR), 0, "Encoding bit wasn't zero, got %s ", byte_to_binary(mode));
 
-    cr_assert_eq((mode & NVAL), (320 % 26), "n value expected to be %d was %d", (320 % 26), (mode & NVAL));
+    cr_assert_eq((mode & NVAL), (320 % (strlen(Alphabet))), "n value expected to be %d was %d", (int)(320 % (strlen(Alphabet))), (mode & NVAL));
 
 }
 
@@ -118,7 +118,7 @@ Test(ValidArgs_Suite, tuts_decr){
     cr_assert_eq((mode & TUTE), 0, "Tutense bit wasn't zero, got %s ", byte_to_binary(mode));
     cr_assert_eq((mode & DECR), DECR, "Decoding bit wasn't set, got %s ", byte_to_binary(mode));
 
-    cr_assert_eq((mode & NVAL), (320 % 26), "n value expected to be %d was %d", (320 % 26), (mode & NVAL));
+    cr_assert_eq((mode & NVAL), (320 % (strlen(Alphabet))), "n value expected to be %d was %d", (int)(320 % (strlen(Alphabet))), (mode & NVAL));
 }
 
 Test(ValidArgs_Suite, bad_args){
