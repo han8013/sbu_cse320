@@ -16,7 +16,7 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
     	// printf("%s\n", "return help mode");
     	// printf("%d\n", ret);
     }
-    else if('s'== *(dash1+1) && argc>=3){
+    else if('s'== *(dash1+1) && argc>=5){
     	// printf("%s\n", "return part2 mode");
     	// printf("%d\n", *dash1);
     	/*point to third position, which -e/-d, fourth and fifth are infile and outfile.*/
@@ -47,7 +47,7 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
         //     ret = 0;
         // }
     }
-    else if('t'== *(dash1+1) && argc>=3){
+    else if('t'== *(dash1+1) && argc>=5){
     	// printf("%s\n", "return part3 mode");
     	// printf("%d\n", *(dash1+1));point to third position, which -e/-d, fourth and fifth are infile and outfile.
     	char* dash2 = *(argv+2);
