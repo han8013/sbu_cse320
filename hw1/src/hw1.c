@@ -53,11 +53,11 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
     	char* dash2 = *(argv+2);
     	if ('e'== *(dash2+1)){
     	    // printf("%d\n", *(dash2+1));
-            printf("%d\n", ret);
-            printf("%d\n", getLength(Alphabet));
+            // printf("%d\n", ret);
+            // printf("%d\n", getLength(Alphabet));
 
     		ret = ret + 320 % (getLength(Alphabet)); // any non-zero number
-    	   printf("%d\n", ret);
+    	   // printf("%d\n", ret);
 
         }
     	else if ('d'== *(dash2+1)){
