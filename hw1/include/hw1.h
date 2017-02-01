@@ -23,6 +23,19 @@ int getFileNumber(char *number);
 
 int getLength(char *start);
 
+void encode(FILE* in, FILE *out, int n);
+
+void decode(FILE* in, FILE *out, int n);
+
+char replaceByEncode(char original, int n);
+
+char replaceByDecode(char original, int n);
+
+
+char toUpperCase(char lowCase);
+
+
+
 #define USAGE(retcode) do{                                                        \
 fprintf(stderr, "%s\n",                                                           \
 "usage: ./hw1 [-s | -t | -h]\n"                                                   \

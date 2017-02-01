@@ -80,6 +80,8 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
         }
         else{
             *in = fopen(*(argv+3), "r");
+            if (in == NULL)
+                return 0;
         }
         if (**(argv+4) =='-'){
             *out = stdout;
@@ -112,6 +114,83 @@ int getFileNumber(char *number){
     // printf("%s%d\n", "n is ", result);
 	return result;
 }
+
+char toUpperCase(char lowCase){
+    if (lowCase>=97 && lowCase<=122){
+        lowCase = lowCase - 32;
+    }
+    return lowCase;
+}
+
+void encode(FILE* in, FILE *out, int n){
+    int length = 0;
+    int offset = 0;
+    char c;
+    while((c = getc(in) )!= EOF){
+        c = replaceByEncode(toUpperCase(c),n);
+        printf("%c", c);
+        /* write to outfile*/
+        fprintf(out, "%c", c);
+        length++;
+        offset++;
+    }
+}
+
+void decode(FILE* in, FILE *out, int n){
+    int length = 0;
+    int offset = 0;
+    char c;
+    while((c = getc(in) )!= EOF){
+        c = replaceByDecode(toUpperCase(c),n);
+        printf("%c", c);
+        /* write to outfile*/
+        fprintf(out, "%c", c);
+        length++;
+        offset++;
+    }
+}
+
+
+char replaceByEncode(char original, int n){
+    int flag = 0;
+    char replaced;
+    int size = getLength(Alphabet);
+    for (int i = 0; i < size; i++){
+        if(original == *(Alphabet+i)){
+            // printf("%c", original);
+            replaced = *(Alphabet+((i+n)%size));
+            flag = 1;
+        }
+    }
+    if (flag == 1){
+        return replaced;
+    }
+    else{
+        return original;
+    }
+}
+
+char replaceByDecode(char original, int n){
+    int flag = 0;
+    char replaced;
+    int size = getLength(Alphabet);
+    for (int i = 0; i < size; i++){
+        if(original == *(Alphabet+i)){
+            // printf("%c", original);
+            replaced = *(Alphabet+((i+(size-n))%size));
+            flag = 1;
+        }
+    }
+    if (flag == 1){
+        return replaced;
+    }
+    else{
+        return original;
+    }
+}
+
+
+
 
 
 

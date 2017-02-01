@@ -4,30 +4,33 @@ int main(int argc, char **argv) {
 
     FILE* in;
     FILE* out;
-    int flag;
+    int mode;
     /* Note: create a variable to assign the result of validargs */
-    flag = validargs(argc, argv, &in, &out);
-    printf("%s\n", "return flag value!");
-    printf("%d\n", flag);
-    if(flag == -128){
-    	USAGE(flag);
+    mode = validargs(argc, argv, &in, &out);
+    printf("%s\n", "return mode value!");
+    printf("%d\n", mode);
+    if(mode == -128){
+    	USAGE(mode);
     	return EXIT_SUCCESS;
     }
-    else if (64<=flag && flag<=95){
+    else if (64<=mode && mode<=95){
         printf("%s\n", "Substitution Encode");
+        encode(in, out, mode-64);
     }
-    else if (96<=flag && flag<=127){
+    else if (96<=mode && mode<=127){
         printf("%s\n", "Substitution Dncode");
+        decode(in, out, mode-96);
+
 
     }
-    else if (32<=flag && flag<=63){
+    else if (32<=mode && mode<=63){
         printf("%s\n", "Tutnese Dncode");
     }
-    else if (1<=flag && flag<=31){
+    else if (1<=mode && mode<=31){
         printf("%s\n", "Tutnese Encode");
     }
     else{
-        USAGE(flag);
+        USAGE(mode);
     	return EXIT_FAILURE;
     }
 }
