@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
         printf("%s\n", "Tutnese Encode");
     }
     else{
-    	printf("EXIT_FAILURE\n");
+        USAGE(flag);
     	return EXIT_FAILURE;
     }
 }
