@@ -1,11 +1,11 @@
 image: gcc:5.4.0
 
 variables:
-    EXEC: hi
-    HW: hw0
-    TESTEXEC: $EXEC_test
-    BINDIR: $HW/bin
-    CRITERIONLINK: https://github.com/Snaipe/Criterion/releases/download/v2.3.0/criterion-v2.3.0-linux-x86_64.tar.bz2
+    HWDIR: hw1
+    EXEC: hw1
+    TESTEXEC: ${EXEC}_test
+    BINDIR: ${HWDIR}/bin
+    CRITERIONLINK: https://github.com/Snaipe/Criterion/releases/download/v2.3.0/criterion-v2.3.0-linux-x86_64.tar.bz2#
 
 before_script:
     - apt-get update &>/dev/null
@@ -15,7 +15,7 @@ before_script:
     - tar -xjf /tmp/criterion.tar.bz2 -C /tmp
     - cp -r /tmp/criterion-v2.3.0/include/criterion /usr/include
     - cp /tmp/criterion-v2.3.0/lib/* /usr/lib
-    - make clean all -C $HW
+    - make clean all -C ${HWDIR}
 
 stages:
     - test
@@ -23,8 +23,8 @@ stages:
 
 test:
     script:
-        - $BINDIR/hi_test --verbose=0
+        - $BINDIR/$TESTEXEC --verbose=0
 
 run:
     script:
-        - $BINDIR/hi
+        - echo

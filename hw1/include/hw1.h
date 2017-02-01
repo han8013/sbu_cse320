@@ -19,6 +19,9 @@
  */
 char validargs(int argc, char **argv, FILE **in, FILE **out);
 
+int getFileNumber(char *number);
+
+int getLength(char *start);
 
 #define USAGE(retcode) do{                                                        \
 fprintf(stderr, "%s\n",                                                           \
