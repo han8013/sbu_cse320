@@ -2,6 +2,7 @@
 #define HW_H
 #include <stdlib.h>
 #include <stdio.h>
+#include "info.h"
 
 #include "const.h"
 
@@ -23,6 +24,12 @@ int getFileNumber(char *number);
 
 int getLength(char *start);
 
+int getLengthOfArray(char **start);
+
+char toUpperCase(char lowCase);
+
+int fileCharacterNumber(FILE *in);
+
 void encode(FILE* in, FILE *out, int n);
 
 void decode(FILE* in, FILE *out, int n);
@@ -31,8 +38,22 @@ char replaceByEncode(char original, int n);
 
 char replaceByDecode(char original, int n);
 
+int isUpper(char c);
 
-char toUpperCase(char lowCase);
+void decode_tutnese(FILE* in, FILE *out);
+
+void encode_tutnese(FILE* in, FILE *out);
+
+void encryption(FILE *out,char c);
+
+char isVowel(char c);
+
+int isDouble(char c, char c2);
+
+void printString(FILE* out, char* s,int isCapital);
+
+
+
 
 
 
