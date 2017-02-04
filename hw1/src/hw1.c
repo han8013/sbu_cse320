@@ -215,7 +215,7 @@ int isUpper(char c){
 
 void decode_tutnese(FILE* in, FILE *out){
     int length = fileCharacterNumber(in);
-    printf("%d\n", length);
+    // printf("%d\n", length);
     fseek(in,0,SEEK_SET);
     char curChar;
     char cq;
