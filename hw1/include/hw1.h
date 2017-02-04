@@ -46,7 +46,13 @@ void encode_tutnese(FILE* in, FILE *out);
 
 void encryption(FILE *out,char c);
 
-char isVowel(char c);
+void decryption(FILE *out,char c);
+
+int foundInArray(FILE* in, FILE* out, char c, char isUpper);
+
+int checkTForVowel(FILE* out, char c, char isUpper, char t);
+
+int isVowel(char c);
 
 int isDouble(char c, char c2);
 

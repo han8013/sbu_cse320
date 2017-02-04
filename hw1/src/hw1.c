@@ -213,19 +213,161 @@ int isUpper(char c){
     return 1;
 }
 
-// void decode_tutnese(FILE* in, FILE *out){
-//     int length = fileCharacterNumber(in);
-//     printf("%d\n", length);
-//     fseek(in,0,SEEK_SET);
-//     char curChar;
+void decode_tutnese(FILE* in, FILE *out){
+    int length = fileCharacterNumber(in);
+    printf("%d\n", length);
+    fseek(in,0,SEEK_SET);
+    char curChar;
+    char cq;
+    char ct;
+    char cvowel;
+    int offset;
+    // start position
+    curChar = fgetc(in);
+    for (int i = 1; i <= length; i++)
+    {
+        if (('A'<=curChar&&curChar<='Z') || ('a'<=curChar&&curChar<='z'))
+        {
+            if (isVowel(curChar))
+            {
+                fprintf(out, "%c", curChar);
 
-// }
+                curChar = getc(in);
+            }
+            else
+            {
+                if (curChar == 's' || curChar == 'S')
+                {
+
+                    if ((cq = fgetc(in))== 'q')
+                    {
+                        i++;
+                        // printf("%s\n", "double show!!!\n");
+                        fseek(in,2,SEEK_CUR);
+                        i=i+2;
+                        if ((ct = fgetc(in))== 't' || ct == 'T')
+                        {
+                            i++;
+                            /* do t+vowel, two characters check */
+                            cvowel = fgetc(in);
+                            offset = checkTForVowel(out,cvowel,curChar,ct);
+                            i++;
+                            fseek(in,offset,SEEK_CUR);
+                            i = i+offset;
+                            curChar = fgetc(in);
+                        }
+                    }
+                    else{
+                        /* do consonant check */
+                        offset = foundInArray(in,out,curChar,curChar);
+                        fseek(in,offset-1,SEEK_CUR); // offset-1 because if(cq == 'q' use fgetc once )
+                        i = i+offset;
+                        curChar = fgetc(in);
+                    }
+                }
+                else{
+                    /* do consonant check */
+
+                    offset = foundInArray(in,out,curChar,curChar);
+                    fseek(in,offset,SEEK_CUR);
+                    i = i+offset;
+                    curChar = fgetc(in);
+                }
+            }
+        }
+        else{
+            fprintf(out, "%c", curChar);
+            curChar = fgetc(in);
+        }
+    }
+}
+
+int foundInArray(FILE* in, FILE* out, char c,char isUpper){
+    // int offset = 0;
+    // offset++;
+    // *buffer = c;
+
+    int found = 0;
+    char *fString;
+    char fChar;
+    int length = getLengthOfArray(Tutnese);
+    for (int i = 0; i < length; ++i)
+    {
+        fString = *(Tutnese+i);
+        fChar = *fString;
+        if (c == fChar || (c+32) == fChar)
+        {
+            // printf("%s%c\n","Found CHAR is--",currentChar );
+            // if ((isUpper-'A')>=32)
+            // {
+            //     fprintf(out, "%c%c", c,c);
+            // }else{
+            //     fprintf(out, "%c%c", c-32,c);
+            // }
+            // fprintf(out, "%c", c);
+            found = getLength(fString)-1;
+        }
+    }
+    fprintf(out, "%c", c);
+    return found;
+}
+
+int checkTForVowel(FILE* out, char c, char isUpper, char t){
+
+    int flag = 0;
+    int found = 0;
+    char *fString;
+    char fChar;
+    int length = getLengthOfArray(Tutnese);
+    for (int i = 0; i < length; ++i)
+    {
+        fString = *(Tutnese+i);
+        fChar = *fString;
+        if (fChar == 't')
+        {
+            flag = 1;
+            fChar = *(fString+1);
+            if (c == fChar)
+            {
+                if ((isUpper-'A')>=32)
+                {
+                    fprintf(out, "%c%c", 't',t);
+                }else{
+                    fprintf(out, "%c%c", 'T',t);
+                }
+                found = getLength(fString)-2; // "tut" , pointer is 'u'
+            }
+            else{
+                if ((isUpper-'A')>=32)
+                {
+                    fprintf(out, "%c%c", c,c);
+                }else{
+                    fprintf(out, "%c%c", c-32,c);
+                }
+
+            }
+        }
+    }
+    if (flag == 0)
+    {
+        if ((isUpper-'A')>=32)
+        {
+            fprintf(out, "%c%c", c,c);
+        }else{
+            fprintf(out, "%c%c", c-32,c);
+        }
+    }
+
+    return found;
+}
+
+
 
 
 
 void encode_tutnese(FILE* in, FILE *out){
     int length = fileCharacterNumber(in);
-    printf("%d\n", length);
+    // printf("%d\n", length);
     fseek(in,0,SEEK_SET);
     char c;
     char c2;
@@ -254,7 +396,10 @@ void encode_tutnese(FILE* in, FILE *out){
                         fprintf(out, "%s", "Squa");
                     else
                         fprintf(out, "%s", "squa");
-                    fprintf(out, "%c", isVowel(c));
+                    if (isVowel(c))
+                    {
+                        fprintf(out, "%c", 't');
+                    }
                     encryption(out,c2);
                     // printf("%d%s\n", i,"?");
                     // printf("%s%c\n", "Third Character--",c);
@@ -271,7 +416,6 @@ void encode_tutnese(FILE* in, FILE *out){
             else{
                 encryption(out,c);
                 // printf("%d%s\n", i,"?");
-
             }
         }
     }
@@ -285,13 +429,12 @@ int isDouble(char c, char c2){
     return 0;
 }
 
-char isVowel(char c){
-    char r = '\0';
+int isVowel(char c){
     if (c == 'a'|| c == 'e'|| c == 'i' || c == 'o'|| c =='u'||(c+32) == 'a'|| (c+32) == 'e'|| (c+32) == 'i' || (c+32) == 'o'|| (c+32) =='u')
     {
-        return 't';
+        return 1;
     }
-    return r;
+    return 0;
 }
 
 void encryption(FILE *out,char c){
@@ -334,32 +477,6 @@ void printString(FILE* out, char* s, int isCapital){
     }
 }
 
-// char* singleEncode(char c){
-//     char temp;
-//     char *result;
-//     char *currentString;
-//     char currentChar;
-//     int length = getLengthOfArray(Tutnese);
-//     for (int i = 0; i < length; ++i)
-//     {
-//         currentString = *(Tutnese+i);
-//         currentChar = *currentString;
-//         if (c == currentChar)
-//         {
-//             // printf("%s%c\n","Found CHAR is--",currentChar );
-//             result = currentString;
-//             // printf("%s%s\n","Found string is--",result );
-//             return result;
-
-//         }
-//     }
-//     // printf("%s%s\n", "Encode char--",result);
-//     // printf("%s",result);
-//     result = &temp;
-//     *result = c;
-//     printf("%c", c);
-//     return result;
-// }
 
 
 

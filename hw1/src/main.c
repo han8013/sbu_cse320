@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
         encode_tutnese(in,out);
     }
     else if (32<=mode && mode<=63){
-        printf("%s\n", "Tutnese Dncode");
+        // printf("%s\n", "Tutnese Dncode");
         decode_tutnese(in, out);
     }
     else{
