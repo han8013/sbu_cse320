@@ -71,8 +71,9 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
         }
         else{
             *in = fopen(*(argv+3), "r");
-            if (in == NULL)
+            if (*in == NULL){
                 return 0;
+            }
         }
         if (**(argv+4) =='-'){
             *out = stdout;
@@ -129,11 +130,7 @@ void encode(FILE* in, FILE *out, int n){
     char c;
     while((c = getc(in) )!= EOF){
         c = replaceByEncode(toUpperCase(c),n);
-        printf("%c", c);
-        /* write to outfile*/
-        if (out!=stdout){
-            fprintf(out, "%c", c);
-        }
+        fprintf(out, "%c", c);
         length++;
         offset++;
     }
@@ -145,11 +142,7 @@ void decode(FILE* in, FILE *out, int n){
     char c;
     while((c = getc(in) )!= EOF){
         c = replaceByDecode(toUpperCase(c),n);
-        printf("%c", c);
-        /* write to outfile*/
-        if (out!=stdout){
-            fprintf(out, "%c", c);
-        }
+        fprintf(out, "%c", c);
         length++;
         offset++;
     }

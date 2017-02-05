@@ -30,9 +30,9 @@ int main(int argc, char **argv) {
         if(*(output)=='-')
             output = "STDOUT";
         if (argc==6)
-            info(Alphabet,*(argv+5),input,output,"Encrption");
+            info(Alphabet,*(argv+5),input,output,"encrption");
         else
-            info(Alphabet,"320",input,output,"Encrption");
+            info(Alphabet,"320",input,output,"encrption");
 
     }
     else if (96<=mode && mode<=127){
@@ -48,9 +48,9 @@ int main(int argc, char **argv) {
         if(*(output)=='-')
             output = "STDOUT";
         if (argc==6)
-            info(Alphabet,*(argv+5),input,output,"Decrption");
+            info(Alphabet,*(argv+5),input,output,"decrption");
         else
-            info(Alphabet,"320",input,output,"Decrption");
+            info(Alphabet,"320",input,output,"decrption");
 
     }
     else if (1<=mode && mode<=31){
