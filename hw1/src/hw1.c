@@ -43,9 +43,7 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
                 ret = ret + 320 % (getLength(Alphabet));
             }
     	}
-        // else{
-        //     ret = 0;
-        // }
+
     }
     else if('t'== *(dash1+1) && argc>=5){
     	// printf("%s\n", "return part3 mode");
@@ -66,8 +64,6 @@ char validargs(int argc, char** argv, FILE** in, FILE** out) {
             ret = ret + 320 % (getLength(Alphabet)); // any non-zero number
     	}
     }
-
-
     /*file open*/
     if (argc>=5){
         if (**(argv+3) =='-'){
@@ -107,8 +103,6 @@ int getLengthOfArray(char **start){
     }
     return length;
 }
-
-
 
 int getFileNumber(char *number){
     int count = getLength(number);
@@ -160,7 +154,6 @@ void decode(FILE* in, FILE *out, int n){
         offset++;
     }
 }
-
 
 char replaceByEncode(char original, int n){
     int flag = 0;
@@ -267,7 +260,6 @@ void decode_tutnese(FILE* in, FILE *out){
                 }
                 else{
                     /* do consonant check */
-
                     offset = foundInArray(in,out,curChar,curChar);
                     fseek(in,offset,SEEK_CUR);
                     i = i+offset;
@@ -283,9 +275,6 @@ void decode_tutnese(FILE* in, FILE *out){
 }
 
 int foundInArray(FILE* in, FILE* out, char c,char isUpper){
-    // int offset = 0;
-    // offset++;
-    // *buffer = c;
 
     int found = 0;
     char *fString;
@@ -297,14 +286,7 @@ int foundInArray(FILE* in, FILE* out, char c,char isUpper){
         fChar = *fString;
         if (c == fChar || (c+32) == fChar)
         {
-            // printf("%s%c\n","Found CHAR is--",currentChar );
-            // if ((isUpper-'A')>=32)
-            // {
-            //     fprintf(out, "%c%c", c,c);
-            // }else{
-            //     fprintf(out, "%c%c", c-32,c);
-            // }
-            // fprintf(out, "%c", c);
+
             found = getLength(fString)-1;
         }
     }
@@ -360,10 +342,6 @@ int checkTForVowel(FILE* out, char c, char isUpper, char t){
 
     return found;
 }
-
-
-
-
 
 void encode_tutnese(FILE* in, FILE *out){
     int length = fileCharacterNumber(in);
