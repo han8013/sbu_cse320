@@ -21,7 +21,7 @@ void processDictionary(FILE* f){
         char* wdPtr = word;
         char line[MAX_SIZE];
         char* character = line;
-        char word_list[MAX_MISSPELLED_WORDS+1][MAX_SIZE];
+        //char word_list[MAX_MISSPELLED_WORDS+1][MAX_SIZE]; // XINGHAN
         int counter = 0;
         int firstWord = 1;
 
@@ -30,14 +30,14 @@ void processDictionary(FILE* f){
         if((line[strlen(line)-2] != ' ' && line[strlen(line)-1] == '\n') || (line[strlen(line)-1] != ' ' && line[strlen(line)-1] != '\n'))
             strcat(line, " ");
 
-        while(*character != NULL)
+        while(*character != '\0')  // XINGHAN
         {
             if(counter >= MAX_MISSPELLED_WORDS+1)
                 break;
             //if the character is a space, add the word in word_list and make word NULL.
             if(*character == ' ')
             {
-                *wdPtr = NULL;
+                wdPtr = NULL;  // *wdPtr = NULL; XINGHAN
                 wdPtr = word;
                 if(firstWord)
                 {
@@ -90,7 +90,7 @@ void freeWords(struct dict_word* currWord){
     {
         freeWords(currWord);
 
-        int i;
+        //int i; // XINGHAN
         //free word
         printf("FREED %s\n", currWord->word);
         free(currWord);
@@ -122,7 +122,7 @@ void printWords(struct dict_word* currWord, FILE* f){
             sprintf(line,"\t\tMISPELLED?: %d\n", ((currWord->misspelled)[i])->misspelled);
             fwrite(line, strlen(line)+1, 1, f);
 
-            sprintf(line, "\t\tACTUAL WORD: %s\n", ((currWord->misspelled)[i])->correct_word);
+            sprintf(line, "\t\tACTUAL WORD: %s\n", ((currWord->misspelled)[i])->correct_word->word); //XINGHAN
             fwrite(line, strlen(line)+1, 1, f);
 
             if(((currWord->misspelled)[i])->next->word != NULL)
@@ -160,7 +160,7 @@ void processWord(char* inputWord){
         if(conf == 'Y')
         {
             struct dict_word* newWord;
-            int counter = 0;
+            //int counter = 0; // XINGHAN
 
             if((newWord = (struct dict_word*) malloc(sizeof(struct dict_word))) == NULL)
             {
@@ -222,7 +222,7 @@ bool foundMisspelledMatch(char* inputWord){
             listPtr->correct_word->misspelled_count++;
             return true;
         }
-        listPtr = listPtr--->next;
+        listPtr = listPtr->next; // XINGHAN
     }
     return false;
 }

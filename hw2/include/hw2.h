@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
-#include "hw2.h"
+//#include "hw2.h"
 
 #define MAX_SIZE 256
 #define WORDLENGTH 50
@@ -21,9 +21,9 @@
 } while (0);
 
 
-char DEFAULT_DICT_FILE[]= "dictionary.txt";
-FILE* DEFAULT_INPUT= stdin;
-FILE* DEFAULT_OUTPUT= stdout;
+//char DEFAULT_DICT_FILE[]= "dictionary.txt";
+//FILE* DEFAULT_INPUT;
+//FILE* DEFAULT_OUTPUT;
 struct dictionary* dict;
 struct misspelled_word* m_list;
 

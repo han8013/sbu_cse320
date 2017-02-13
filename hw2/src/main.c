@@ -1,8 +1,9 @@
 #include "hw2.h"
 
 int main(int argc, char *argv[]){
-    DEFAULT_INPUT = stdin;
-    DEFAULT_OUTPUT = stdout;
+    char DEFAULT_DICT_FILE[]= "dictionary.txt";
+    FILE* DEFAULT_INPUT = stdin;
+    FILE* DEFAULT_OUTPUT = stdout;
     //create dictionary
     if((dict = (struct dictionary*) malloc(sizeof(struct dictionary))) == NULL)
     {
@@ -100,7 +101,7 @@ int main(int argc, char *argv[]){
         if((line[strlen(line)-1] != ' ') && (line[strlen(line)-1] != '\n'))
             strcat(line, " ");
         //replaces spaces within a line with new lines
-        while(*character != NULL)
+        while(*character != '\0') // XINGHAN
         {
             if(*character == ' ' || *character == '\n')
             {
@@ -114,7 +115,7 @@ int main(int argc, char *argv[]){
                 printf("%d", strlen(wdPtr)-strlen(punct));
                 */
 
-                *wdPtr = NULL;
+                wdPtr = NULL;  // XINGHAN
                 wdPtr = word;
 
                 processWord(wdPtr);
