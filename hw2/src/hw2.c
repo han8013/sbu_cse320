@@ -4,7 +4,7 @@
 
 void processDictionary(FILE* f){
     dict->num_words = 0;
-    //char prev[MAX_SIZE] = "";
+    //char prev[MAX_SIZE] = "  ";
     while(!feof(f))
     {
         //initialize the current word.
