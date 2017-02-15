@@ -100,14 +100,10 @@ void addMisspelledWord(struct misspelled_word* misspelledWord, struct dict_word*
 void freeWords(struct dict_word* currWord){
     if(currWord != NULL)
     {
-        //printf("front1");
         freeWords(currWord->next);
 
-        //int i; // XINGHAN
         //free word
-        //printf("front2");
         printf("FREED %s\n", currWord->word);
-        //printf("back");
         free(currWord);
     }
 }
@@ -162,7 +158,8 @@ void processWord(char* inputWord){
         return;
     else
     {
-        char ch;
+        // Scanning Y/N
+        /*char ch;
         char conf;
 
         do
@@ -170,9 +167,10 @@ void processWord(char* inputWord){
             printf("\"%s\" was not found in the dictionary. Do you want to add it (Y/N)? ", inputWord);
             scanf("%c", &conf);
             while ((ch = getchar()) != '\n' && ch != EOF);
-        }while(conf!='Y' && conf!='N');
+        }while(conf!='Y' && conf!='N');*/
 
-        if(conf == 'Y')
+        // handle Y/N
+        /*if(conf == 'Y')
         {
             struct dict_word* newWord;
             //int counter = 0; // XINGHAN
@@ -222,6 +220,14 @@ void processWord(char* inputWord){
                     numMisspellings--;
                 }
             }
+        }*/
+
+        // New Style
+        if(nMis > 0 && nMis < 6) {
+
+
+
+
         }
     }
 }

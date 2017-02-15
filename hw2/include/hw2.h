@@ -27,6 +27,7 @@
 //FILE* DEFAULT_OUTPUT;
 struct dictionary* dict;
 struct misspelled_word* m_list;
+int nMis; // Number of misspelled words should be put in the dictionary
 
 struct Args{
     bool d;

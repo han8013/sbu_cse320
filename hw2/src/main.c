@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
     FILE* iFile = DEFAULT_INPUT;
     FILE* oFile = DEFAULT_OUTPUT;
     //Declare number of misspelled words
-    int n = 0;
+    nMis = 0;
 
     /*char opt = '\0';
     for(i = 1; i< argc; i++)
@@ -97,9 +97,9 @@ int main(int argc, char *argv[]){
                 break;
             case 'A':
                 //printf("helkloooo%d", n);
-                n = atoi(optarg);
+                nMis = atoi(optarg);
                 //printf("we are here %d", n);
-                if(n < 1 || n > 5)
+                if(nMis < 1 || nMis > 5)
                     nFlag = 1;
                 break;
         }
@@ -197,6 +197,8 @@ int main(int argc, char *argv[]){
     printWords(dict->word_list , oFile);
 
     //printf("\n--------FREED WORDS--------\n");
+    strcpy(line, "\n--------FREED WORDS--------\n");
+    fwrite(line, strlen(line)+1, 1, oFile);
     freeWords(dict->word_list);
     //free dictionary
     free(dict);
