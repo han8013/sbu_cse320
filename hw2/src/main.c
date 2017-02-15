@@ -70,6 +70,7 @@ int main(int argc, char *argv[]){
                 opt = 'o';
         }
     }*/
+
     int helpFlag = 0; //Keep track if there's h flag
     int nFlag = 0; //Keep track if anything wrong with An
     int opt = 0;
