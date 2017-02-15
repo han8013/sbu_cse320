@@ -1,7 +1,7 @@
 #include "hw2.h"
 
 int main(int argc, char *argv[]){
-    char DEFAULT_DICT_FILE[]= "dictionary.txt";
+    char DEFAULT_DICT_FILE[]= "rsrc/dictionary.txt";
     FILE* DEFAULT_INPUT = stdin;
     FILE* DEFAULT_OUTPUT = stdout;
     //create dictionary
@@ -25,14 +25,16 @@ int main(int argc, char *argv[]){
     args.o = false;
     strcpy(args.dictFile, DEFAULT_DICT_FILE);
     // Make a loop index
-    int i;
+    //int i;
     char line[MAX_SIZE];
     //Declare Files
     FILE* dFile;
     FILE* iFile = DEFAULT_INPUT;
     FILE* oFile = DEFAULT_OUTPUT;
+    //Declare number of misspelled words
+    int n = 0;
 
-    char opt = '\0';
+    /*char opt = '\0';
     for(i = 1; i< argc; i++)
     {
         char* currArg = argv[i];
@@ -67,17 +69,71 @@ int main(int argc, char *argv[]){
             if(strcmp(currArg, "-o") == 0)
                 opt = 'o';
         }
+    }*/
+    int helpFlag = 0; //Keep track if there's h flag
+    int nFlag = 0; //Keep track if anything wrong with An
+    int opt = 0;
+    while((opt = getopt(argc, argv, "ho:i:d:A:")) != -1) {
+        switch(opt) {
+            case 'h':
+                USAGE();
+                helpFlag = 1;
+                break;
+            case 'o':
+                strcpy(args.output, optarg);
+                args.o = true;
+                oFile = fopen(optarg, "w");
+                break;
+            case 'i':
+                strcpy(args.input, optarg);
+                args.i = true;
+                iFile = fopen(optarg, "r");
+                break;
+            case 'd':
+                strcpy(args.dictFile, optarg);
+                //printf("%s", args.dictFile);
+                args.d = true;
+                break;
+            case 'A':
+                //printf("helkloooo%d", n);
+                n = atoi(optarg);
+                //printf("we are here %d", n);
+                if(n < 1 || n > 5)
+                    nFlag = 1;
+                break;
+        }
     }
+
+    if(helpFlag == 1) {
+        if(iFile != NULL) fclose(iFile);
+        if(oFile != NULL) fclose(oFile);
+        return EXIT_SUCCESS;
+    }
+
+    if(nFlag == 1) {
+        USAGE();
+        if(iFile != NULL) fclose(iFile);
+        if(oFile != NULL) fclose(oFile);
+        return EXIT_FAILURE;
+    }
+
     dFile = fopen(args.dictFile, "r");
 
     if(iFile == NULL && args.i == true)
     {
-        printf("Unable to open: %s.\n", args.input);
+        //printf("Unable to open: %s.\n", args.input);
+        USAGE();
+        if(iFile != NULL) fclose(iFile);
+        if(oFile != NULL) fclose(oFile);
         return EXIT_FAILURE;
     }
     if(dFile == NULL)
     {
-        printf("Unable to open: %s.\n", args.dictFile);
+        //printf("Unable to open: %s.\n", args.dictFile);
+        USAGE();
+        if(iFile != NULL) fclose(iFile);
+        if(oFile != NULL) fclose(oFile);
+        return EXIT_FAILURE;
     }
     else
     {
@@ -106,14 +162,15 @@ int main(int argc, char *argv[]){
             if(*character == ' ' || *character == '\n')
             {
                 /*char* punct = wdPtr-1;
-                    printf("char:%c",punct);
+                    printf("char:%c",*punct);
                 while(!((*punct>='a' && *punct<='z') || (*punct>='A' && *punct<='Z')))
                 {
                     punct--;
                 }
                 punct++;
-                printf("%d", strlen(wdPtr)-strlen(punct));
-                */
+                int size = strlen(wdPtr)-strlen(punct);
+                printf("%d", size); *///strlen(wdPtr)-strlen(punct)); XINGHAN
+
 
                 wdPtr = NULL;  // XINGHAN
                 wdPtr = word;

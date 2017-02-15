@@ -22,6 +22,7 @@ void processDictionary(FILE* f){
         char line[MAX_SIZE];
         char* character = line;
         //char word_list[MAX_MISSPELLED_WORDS+1][MAX_SIZE]; // XINGHAN
+
         int counter = 0;
         int firstWord = 1;
 
