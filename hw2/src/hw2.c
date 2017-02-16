@@ -235,7 +235,7 @@ void processWord(char* inputWord){
 
             addWord(newWord, inputWord);
             dict->word_list = newWord;
-            printf("Added \"%s\" to Dictionary.", inputWord);
+            //printf("Added \"%s\" to Dictionary.", inputWord);
 
             // Then add misspelled words if necessary
             if(nMis > 0 && nMis < 6) {

@@ -123,7 +123,7 @@ int main(int argc, char *argv[]){
 
     if(iFile == NULL && args.i == true)
     {
-        //printf("Unable to open: %s.\n", args.input); XINGHAN
+        printf("Unable to open: %s.\n", args.input);
         USAGE();
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
@@ -153,34 +153,57 @@ int main(int argc, char *argv[]){
         //char line[MAX_SIZE];
         char* character = line;
 
+        memset(line, 0, MAX_SIZE + 1);
         fgets(line, MAX_SIZE+1, iFile);
 
         //if there isn't a space or newline at the end of the line, put one there
         if((line[strlen(line)-1] != ' ') && (line[strlen(line)-1] != '\n'))
             strcat(line, " ");
+
+        // change to be lower case
+        int i = 0;
+        while( line[i] ) {
+            line[i] = (tolower(line[i]));
+            //putchar(line[i]);
+            i++;
+        }
+
         //replaces spaces within a line with new lines
         while(*character != '\0') // XINGHAN
         {
             if(*character == ' ' || *character == '\n')
-            {
-                /*char* punct = wdPtr-1;
-                    printf("char:%c",*punct);
-                while(!((*punct>='a' && *punct<='z') || (*punct>='A' && *punct<='Z')))
+             {
+                // delete punct
+                char* punctb = wdPtr-1;
+                //printf("char:%c",*punct);
+                while(!((*punctb>='a' && *punctb<='z') || (*punctb>='A' && *punctb<='Z')) && punctb >= word)
                 {
-                    punct--;
+                    punctb--;
                 }
-                punct++;
-                int size = strlen(wdPtr)-strlen(punct);
-                printf("%d", size); *///strlen(wdPtr)-strlen(punct)); XINGHAN
-
+                punctb++;
+                char temp = *punctb;
+                *punctb = '\0';
+                char* punctf = word;
+                //printf("char:%c",*punct);
+                while(!((*punctf>='a' && *punctf<='z') || (*punctf>='A' && *punctf<='Z')) && punctf <= wdPtr)
+                {
+                    punctf++;
+                }
+                //int size = strlen(wdPtr)-strlen(punct);
+                //printf("%d", size); //strlen(wdPtr)-strlen(punct)); XINGHAN
 
                 wdPtr = NULL;  // XINGHAN
+                wdPtr = punctf; //XINGHAN
+                if(punctb - punctf > 0){
+                    processWord(wdPtr);
+                }
+
+                *punctb = temp;
                 wdPtr = word;
-
-                processWord(wdPtr);
-
                 strcat(wdPtr, " ");
                 fwrite(wdPtr, strlen(wdPtr)+1, 1, oFile);
+
+                memset(word, 0, MAX_SIZE + 1);
             }
             else
             {
@@ -188,6 +211,9 @@ int main(int argc, char *argv[]){
             }
             character++;
         }
+
+        strcpy(wdPtr, "\n");
+        fwrite(wdPtr, strlen(wdPtr)+1, 1, oFile);
 
         if(iFile == stdin)
             break;
