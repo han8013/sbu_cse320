@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <unistd.h>
-//#include "hw2.h"
+#include "mispelling.h"
 
 #define MAX_SIZE 256
 #define WORDLENGTH 50
@@ -28,6 +28,7 @@
 struct dictionary* dict;
 struct misspelled_word* m_list;
 int nMis; // Number of misspelled words should be put in the dictionary
+int aFlag; // Keep track that if -A is specified
 
 struct Args{
     bool d;

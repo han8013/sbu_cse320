@@ -24,6 +24,7 @@ int main(int argc, char *argv[]){
     args.i = false;
     args.o = false;
     strcpy(args.dictFile, DEFAULT_DICT_FILE);
+    aFlag = 0;
     // Make a loop index
     //int i;
     char line[MAX_SIZE];
@@ -34,7 +35,7 @@ int main(int argc, char *argv[]){
     //Declare number of misspelled words
     nMis = 0;
 
-    /*char opt = '\0';
+    /*char opt = '\0'; XINGHAN
     for(i = 1; i< argc; i++)
     {
         char* currArg = argv[i];
@@ -92,25 +93,25 @@ int main(int argc, char *argv[]){
                 break;
             case 'd':
                 strcpy(args.dictFile, optarg);
-                //printf("%s", args.dictFile);
                 args.d = true;
                 break;
             case 'A':
-                //printf("helkloooo%d", n);
+                aFlag = 1;
                 nMis = atoi(optarg);
-                //printf("we are here %d", n);
-                if(nMis < 1 || nMis > 5)
+                if(nMis < 0 || nMis > 5)
                     nFlag = 1;
                 break;
         }
     }
 
+    // handle -h exit
     if(helpFlag == 1) {
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
         return EXIT_SUCCESS;
     }
 
+    // handle incorrect -An input
     if(nFlag == 1) {
         USAGE();
         if(iFile != NULL) fclose(iFile);
@@ -122,7 +123,7 @@ int main(int argc, char *argv[]){
 
     if(iFile == NULL && args.i == true)
     {
-        //printf("Unable to open: %s.\n", args.input);
+        //printf("Unable to open: %s.\n", args.input); XINGHAN
         USAGE();
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
@@ -130,7 +131,7 @@ int main(int argc, char *argv[]){
     }
     if(dFile == NULL)
     {
-        //printf("Unable to open: %s.\n", args.dictFile);
+        //printf("Unable to open: %s.\n", args.dictFile); XINGHAN
         USAGE();
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
