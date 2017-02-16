@@ -255,7 +255,7 @@ int main(int argc, char *argv[]){
 
     strcpy(line, "\n--------DICTIONARY WORDS--------\n");
     fwrite(line, strlen(line)+1, 1, oFile);
-    printWords(dict->word_list , oFile);
+    printWords(dict->word_list);// , oFile); XINGHAN
 
     //printf("\n--------FREED WORDS--------\n");
     strcpy(line, "\n--------FREED WORDS--------\n");

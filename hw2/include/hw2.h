@@ -107,7 +107,7 @@ void freeWords(struct dict_word* word);
  * @param      word  The word
  * @param      f     { parameter_description }
  */
-void printWords(struct dict_word* word, FILE* f);
+void printWords(struct dict_word* word); //, FILE* f); XINGHAN
 
 
 
