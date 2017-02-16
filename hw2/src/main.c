@@ -25,6 +25,9 @@ int main(int argc, char *argv[]){
     args.o = false;
     strcpy(args.dictFile, DEFAULT_DICT_FILE);
     aFlag = 0;
+    dFlag = 0;
+
+
     // Make a loop index
     //int i;
     char line[MAX_SIZE];
@@ -123,7 +126,7 @@ int main(int argc, char *argv[]){
 
     if(iFile == NULL && args.i == true)
     {
-        printf("Unable to open: %s.\n", args.input);
+        //printf("Unable to open: %s.\n", args.input);
         USAGE();
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
@@ -218,6 +221,37 @@ int main(int argc, char *argv[]){
         if(iFile == stdin)
             break;
     }
+
+    // Create new dictionary if necessary
+    if(dFlag) {
+        // First get the name of the new dictionary
+        char newDictName[MAX_SIZE] = "";
+        char* dF = args.dictFile;
+        char* dB = dF + strlen(args.dictFile) - 1;
+        while(dB >= dF) {
+            if(*dB == '/') {
+                break;
+            }
+            dB --;
+        }
+        dB++;
+        if(dB > dF) {
+            dB--;
+            *dB = '\0';
+            strcpy(newDictName, dF);
+            dB++;
+            strcat(newDictName, "/new_");
+            strcat(newDictName, dB);
+
+        } else {
+            strcpy(newDictName, "new_");
+            strcat(newDictName, dF);
+        }
+        // Then output contents
+        createNewDict(newDictName);
+    }
+
+
 
     strcpy(line, "\n--------DICTIONARY WORDS--------\n");
     fwrite(line, strlen(line)+1, 1, oFile);

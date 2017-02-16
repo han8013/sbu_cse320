@@ -30,6 +30,7 @@ struct dictionary* dict;
 struct misspelled_word* m_list;
 int nMis; // Number of misspelled words should be put in the dictionary
 int aFlag; // Keep track that if -A is specified
+int dFlag; // Keep track that if the old dictionary was modified
 
 struct Args{
     bool d;
@@ -138,3 +139,8 @@ bool foundMisspelledMatch(char* inputWord);
  * @return     boolean
  */
 bool foundDictMatch(char* inputWord);
+
+
+
+
+void createNewDict(char* dictName);
