@@ -146,8 +146,8 @@ int main(int argc, char *argv[]){
 
     }
 
-    strcpy(line,"\n--------INPUT FILE WORDS--------\n");
-    fwrite(line, strlen(line)+1, 1, oFile);
+    //strcpy(line,"\n--------INPUT FILE WORDS--------\n");
+    //fwrite(line, strlen(line)+1, 1, oFile);
 
     while(!feof(iFile))
     {
@@ -194,15 +194,19 @@ int main(int argc, char *argv[]){
                     *punctb = '\0';
                 }
                 char* punctf = word;
-                while(!((*punctf>='a' && *punctf<='z') || (*punctf>='A' && *punctf<='Z')) && punctf <= wdPtr)
+                while(!((*punctf>='a' && *punctf<='z') || (*punctf>='A' && *punctf<='Z')) && punctf < wdPtr)
                 {
                     punctf++;
                 }
                 strcpy(mid, punctf);
                 if(punctf > word){
                     *punctf = '\0';
+                    char* temp;
                     strcpy(front, word);
+                    temp = front;
+                    fwrite(temp, strlen(temp)+1, 1, oFile);
                 }
+
 
                 //int size = strlen(wdPtr)-strlen(punct);
                 //printf("%d", size); //strlen(wdPtr)-strlen(punct)); XINGHAN
@@ -213,13 +217,21 @@ int main(int argc, char *argv[]){
                     processWord(wdPtr);
                 }
 
+                /*if(punctf > word) {
+                    puts(front);
+                    printf("%d\n",(int)strlen(front));
+
+                }*/
+
+                //char temp[MAX_SIZE];
+
                 memset(word, 0, MAX_SIZE+1);
                 wdPtr = word;
-                if(strlen(front) > 0)
-                    strcat(wdPtr, front);
+                /*if(strlen(front) > 0)
+                    strcat(wdPtr, front);*/
                 if(strlen(mid) > 0)
                     strcat(wdPtr, mid);
-                if(strlen(front) > 0)
+                if(strlen(back) > 0)
                     strcat(wdPtr, back);
                 strcat(wdPtr, " ");
                 fwrite(wdPtr, strlen(wdPtr)+1, 1, oFile);
@@ -272,13 +284,15 @@ int main(int argc, char *argv[]){
 
 
 
-    strcpy(line, "\n--------DICTIONARY WORDS--------\n");
-    fwrite(line, strlen(line)+1, 1, oFile);
+    //strcpy(line, "\n--------DICTIONARY WORDS--------\n");
+    //fwrite(line, strlen(line)+1, 1, oFile);
     printWords(dict->word_list);// , oFile); XINGHAN
 
     //printf("\n--------FREED WORDS--------\n");
-    strcpy(line, "\n--------FREED WORDS--------\n");
-    fwrite(line, strlen(line)+1, 1, oFile);
+    //strcpy(line, "\n--------FREED WORDS--------\n");
+    //fwrite(line, strlen(line)+1, 1, oFile);
+
+    //free word list
     freeWords(dict->word_list);
     //free dictionary
     free(dict);

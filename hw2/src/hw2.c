@@ -4,6 +4,7 @@
 
 void processDictionary(FILE* f){
     dict->num_words = 0;
+    //struct dict_word* currWord;
     while(!feof(f))
     {
         //initialize the current word.
@@ -64,6 +65,8 @@ void processDictionary(FILE* f){
 
                         addMisspelledWord(currMisspelling, currWord, wdPtr);
                         memset(word, 0, MAX_SIZE+1);
+                        //if(currMisspelling != NULL)
+                            //free(currMisspelling);
                     }
                 }
                 //if the character isn't a space or a new line, add the character to word.
@@ -72,6 +75,8 @@ void processDictionary(FILE* f){
                 character++;
             }
         }
+        //if(currWord!=NULL)
+        //free(currWord);
     }
 }
 
@@ -99,9 +104,6 @@ void freeWords(struct dict_word* currWord){
     if(currWord != NULL)
     {
         freeWords(currWord->next);
-
-        //free word
-        printf("FREED %s\n", currWord->word);
         free(currWord);
     }
 }
@@ -345,6 +347,7 @@ void processWord(char* inputWord){
 
         // New Style
         // First add new word if -A is specified
+        //struct dict_word* newWord;
         if(aFlag == 1) {
             struct dict_word* newWord;
             if((newWord = (struct dict_word*) malloc(sizeof(struct dict_word))) == NULL)
@@ -381,8 +384,12 @@ void processWord(char* inputWord){
                     strcpy(word, typos[--numMisspellings]);
                     addMisspelledWord(newMWord, newWord, wdPtr);
                 }
+                //free(typos);
             }
+            //if(newWord!= NULL)
+                //free(newWord);
         }
+        //free(newWord);
     }
 }
 
