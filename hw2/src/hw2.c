@@ -100,7 +100,8 @@ void addMisspelledWord(struct misspelled_word* misspelledWord, struct dict_word*
 void freeWords(struct dict_word* currWord){
     if(currWord != NULL)
     {
-        freeWords(currWord->next);
+        struct dict_word* next = currWord->next;
+        freeWords(next);
         free(currWord);
     }
 }

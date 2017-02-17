@@ -23,6 +23,7 @@ int main(int argc, char *argv[]){
     args.d = false;
     args.i = false;
     args.o = false;
+    memset(args.dictFile, 0, MAX_SIZE+1);
     strcpy(args.dictFile, DEFAULT_DICT_FILE);
     aFlag = 0;
     dFlag = 0;
