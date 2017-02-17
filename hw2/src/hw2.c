@@ -4,11 +4,11 @@
 
 void processDictionary(FILE* f){
     dict->num_words = 0;
-    //struct dict_word* currWord;
+    struct dict_word* currWord;
     while(!feof(f))
     {
         //initialize the current word.
-        struct dict_word* currWord;
+        //struct dict_word* currWord;
         if((currWord = (struct dict_word*) malloc(sizeof(struct dict_word))) == NULL)
         {
             printf("OUT OF MEMORY.\n");
@@ -65,8 +65,6 @@ void processDictionary(FILE* f){
 
                         addMisspelledWord(currMisspelling, currWord, wdPtr);
                         memset(word, 0, MAX_SIZE+1);
-                        //if(currMisspelling != NULL)
-                            //free(currMisspelling);
                     }
                 }
                 //if the character isn't a space or a new line, add the character to word.
@@ -75,9 +73,9 @@ void processDictionary(FILE* f){
                 character++;
             }
         }
-        //if(currWord!=NULL)
-        //free(currWord);
     }
+    if(currWord!=NULL)
+        free(currWord);
 }
 
 void addWord(struct dict_word* dWord, char* word){
@@ -96,7 +94,6 @@ void addMisspelledWord(struct misspelled_word* misspelledWord, struct dict_word*
     misspelledWord->correct_word = correctWord;
     misspelledWord->next = m_list;
     (correctWord->misspelled)[correctWord->num_misspellings++] = misspelledWord;
-    //correctedWord->++;
     m_list = misspelledWord;
 }
 
@@ -152,22 +149,11 @@ void printWords(struct dict_word* currWord){ //, FILE* f){ XINGHAN
     }*/
 
     // New Style
-    //char top1[MAX_SIZE]; //Top misspelled word number 1
-    //char top2[MAX_SIZE]; //Top misspelled word number 2
-    //char top3[MAX_SIZE]; //Top misspelled word number 3
-    //memset(top1, 0, MAX_SIZE+1);
-    //memset(top2, 0, MAX_SIZE+1);
-    //memset(top3, 0, MAX_SIZE+1);
-    //int max1;
-    //int max2;
-    //int max3;
     struct dict_word* top1;
     struct dict_word* top2;
     struct dict_word* top3;
     int total = 0; // Total number of words in dictionary
     int dSize =  sizeof(struct dictionary) + sizeof(struct dict_word) * dict->num_words; //Size of dictionary (in bytes)
-    //printf("%d  %d  %d\n", (int)sizeof(struct dictionary), (int) sizeof(struct dict_word), dict->num_words);
-
     int mSize = 0; //Size of misspelled word list (in bytes)
     int num_mis = 0; //Total number of misspelled words found in text
 
@@ -187,7 +173,6 @@ void printWords(struct dict_word* currWord){ //, FILE* f){ XINGHAN
 
         total ++;
 
-        //char line[MAX_SIZE];
         int i;
 
 
@@ -358,11 +343,8 @@ void processWord(char* inputWord){
 
             addWord(newWord, inputWord);
             dict->num_words++;
-            //dict->word_list = newWord;
             // Update dFlag since the dictionary is modified
             dFlag = 1;
-
-            //printf("Added \"%s\" to Dictionary.", inputWord);
 
             // Then add misspelled words if necessary
             if(nMis > 0 && nMis < 6) {
@@ -375,6 +357,7 @@ void processWord(char* inputWord){
                     char word[WORDLENGTH];
                     char* wdPtr = word;
                     struct misspelled_word* newMWord;
+                    memset(word, 0, WORDLENGTH + 1);
 
                     if((newMWord = (struct misspelled_word*) malloc(sizeof(struct misspelled_word))) == NULL)
                     {
@@ -384,12 +367,13 @@ void processWord(char* inputWord){
                     strcpy(word, typos[--numMisspellings]);
                     addMisspelledWord(newMWord, newWord, wdPtr);
                 }
-                //free(typos);
+                for(int i = 0; i < nMis; i++) {
+                    free(typos[i]);
+                }
+                free(typos);
+
             }
-            //if(newWord!= NULL)
-                //free(newWord);
         }
-        //free(newWord);
     }
 }
 
@@ -421,9 +405,7 @@ bool foundDictMatch(char* inputWord){
 }
 
 void createNewDict(char* dictName) {
-    //puts(dictName);
     FILE* newDict = fopen(dictName, "w");
-    //FILE* newDict = fopen(stdout, "w");
     struct dict_word* dwPtr = dict->word_list;
     char word[MAX_SIZE];
     while(dwPtr != NULL) {
@@ -442,7 +424,6 @@ void createNewDict(char* dictName) {
             memset(word, 0, MAX_SIZE + 1);
             strcpy(word, mwPtr->word);
             fwrite(word, strlen(word)+1, 1, newDict);
-            //printf("heeee  %s\n", mwPtr->word);
         }
 
         // write new line
@@ -452,5 +433,14 @@ void createNewDict(char* dictName) {
 
         // next word
         dwPtr = dwPtr->next;
+    }
+    fclose(newDict);
+}
+
+void freeMList(struct misspelled_word* mw) {
+    if(mw != NULL)
+    {
+        freeMList(mw->next);
+        free(mw);
     }
 }

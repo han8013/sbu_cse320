@@ -109,6 +109,12 @@ int main(int argc, char *argv[]){
 
     // handle -h exit
     if(helpFlag == 1) {
+        //free word list
+        freeWords(dict->word_list);
+        //free dictionary
+        free(dict);
+        //free m_list
+        freeMList(m_list);
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
         return EXIT_SUCCESS;
@@ -117,6 +123,12 @@ int main(int argc, char *argv[]){
     // handle incorrect -An input
     if(nFlag == 1) {
         USAGE();
+        //free word list
+        freeWords(dict->word_list);
+        //free dictionary
+        free(dict);
+        //free m_list
+        freeMList(m_list);
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
         return EXIT_FAILURE;
@@ -126,16 +138,29 @@ int main(int argc, char *argv[]){
 
     if(iFile == NULL && args.i == true)
     {
-        //printf("Unable to open: %s.\n", args.input);
+        //printf("Unable to open: %s.\n", args.input); XINGHAN
         USAGE();
+        //free word list
+        freeWords(dict->word_list);
+        //free dictionary
+        free(dict);
+        //free m_list
+        freeMList(m_list);
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
+        if(dFile != NULL) fclose(dFile);
         return EXIT_FAILURE;
     }
     if(dFile == NULL)
     {
         //printf("Unable to open: %s.\n", args.dictFile); XINGHAN
         USAGE();
+        //free word list
+        freeWords(dict->word_list);
+        //free dictionary
+        free(dict);
+        //free m_list
+        freeMList(m_list);
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
         return EXIT_FAILURE;
@@ -183,7 +208,7 @@ int main(int argc, char *argv[]){
                 memset(mid, 0, MAX_SIZE+1);
                 memset(back, 0, MAX_SIZE+1);
 
-                // delete punct
+                // handle punct
                 char* punctb = wdPtr-1;
                 while(!((*punctb>='a' && *punctb<='z') || (*punctb>='A' && *punctb<='Z')) && punctb >= word)
                 {
@@ -207,35 +232,21 @@ int main(int argc, char *argv[]){
                     fwrite(temp, strlen(temp)+1, 1, oFile);
                 }
 
-
-                //int size = strlen(wdPtr)-strlen(punct);
-                //printf("%d", size); //strlen(wdPtr)-strlen(punct)); XINGHAN
-
                 wdPtr = NULL;  // XINGHAN
                 wdPtr = mid; //XINGHAN
                 if(strlen(mid) > 0){
                     processWord(wdPtr);
                 }
 
-                /*if(punctf > word) {
-                    puts(front);
-                    printf("%d\n",(int)strlen(front));
-
-                }*/
-
-                //char temp[MAX_SIZE];
 
                 memset(word, 0, MAX_SIZE+1);
                 wdPtr = word;
-                /*if(strlen(front) > 0)
-                    strcat(wdPtr, front);*/
                 if(strlen(mid) > 0)
                     strcat(wdPtr, mid);
                 if(strlen(back) > 0)
                     strcat(wdPtr, back);
                 strcat(wdPtr, " ");
                 fwrite(wdPtr, strlen(wdPtr)+1, 1, oFile);
-                //printf("len: %d\n", (int)strlen(mid));
 
                 memset(word, 0, MAX_SIZE + 1);
             }
@@ -297,7 +308,7 @@ int main(int argc, char *argv[]){
     //free dictionary
     free(dict);
     //free m_list
-    free(m_list);
+    freeMList(m_list);
 
     fclose(dFile);
     fclose(iFile);

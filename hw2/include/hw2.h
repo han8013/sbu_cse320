@@ -144,3 +144,7 @@ bool foundDictMatch(char* inputWord);
 
 
 void createNewDict(char* dictName);
+
+
+
+void freeMList(struct misspelled_word* mw);
