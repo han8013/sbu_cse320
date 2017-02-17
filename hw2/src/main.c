@@ -16,7 +16,7 @@ int main(int argc, char *argv[]){
         printf("ERROR: OUT OF MEMORY.\n");
         return EXIT_FAILURE;
     }
-    m_list = NULL;
+    //m_list = NULL;
 
     struct Args args;
     // Set struct default values
