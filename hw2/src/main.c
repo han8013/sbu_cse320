@@ -176,35 +176,54 @@ int main(int argc, char *argv[]){
         {
             if(*character == ' ' || *character == '\n')
              {
+                char front[MAX_SIZE];
+                char mid[MAX_SIZE];
+                char back[MAX_SIZE];
+                memset(front, 0, MAX_SIZE+1);
+                memset(mid, 0, MAX_SIZE+1);
+                memset(back, 0, MAX_SIZE+1);
+
                 // delete punct
                 char* punctb = wdPtr-1;
-                //printf("char:%c",*punct);
                 while(!((*punctb>='a' && *punctb<='z') || (*punctb>='A' && *punctb<='Z')) && punctb >= word)
                 {
                     punctb--;
                 }
-                punctb++;
-                char temp = *punctb;
-                *punctb = '\0';
+                if(++punctb > word) {
+                    strcpy(back, punctb);
+                    *punctb = '\0';
+                }
                 char* punctf = word;
-                //printf("char:%c",*punct);
                 while(!((*punctf>='a' && *punctf<='z') || (*punctf>='A' && *punctf<='Z')) && punctf <= wdPtr)
                 {
                     punctf++;
                 }
+                strcpy(mid, punctf);
+                if(punctf > word){
+                    *punctf = '\0';
+                    strcpy(front, word);
+                }
+
                 //int size = strlen(wdPtr)-strlen(punct);
                 //printf("%d", size); //strlen(wdPtr)-strlen(punct)); XINGHAN
 
                 wdPtr = NULL;  // XINGHAN
-                wdPtr = punctf; //XINGHAN
-                if(punctb - punctf > 0){
+                wdPtr = mid; //XINGHAN
+                if(strlen(mid) > 0){
                     processWord(wdPtr);
                 }
 
-                *punctb = temp;
+                memset(word, 0, MAX_SIZE+1);
                 wdPtr = word;
+                if(strlen(front) > 0)
+                    strcat(wdPtr, front);
+                if(strlen(mid) > 0)
+                    strcat(wdPtr, mid);
+                if(strlen(front) > 0)
+                    strcat(wdPtr, back);
                 strcat(wdPtr, " ");
                 fwrite(wdPtr, strlen(wdPtr)+1, 1, oFile);
+                //printf("len: %d\n", (int)strlen(mid));
 
                 memset(word, 0, MAX_SIZE + 1);
             }

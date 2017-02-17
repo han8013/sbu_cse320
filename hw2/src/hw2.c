@@ -150,23 +150,40 @@ void printWords(struct dict_word* currWord){ //, FILE* f){ XINGHAN
     }*/
 
     // New Style
-    char top1[MAX_SIZE]; //Top misspelled word number 1
-    char top2[MAX_SIZE]; //Top misspelled word number 2
-    char top3[MAX_SIZE]; //Top misspelled word number 3
-    memset(top1, 0, MAX_SIZE+1);
-    memset(top2, 0, MAX_SIZE+1);
-    memset(top3, 0, MAX_SIZE+1);
-    int max1 = 0;
-    int max2 = 0;
-    int max3 = 0;
+    //char top1[MAX_SIZE]; //Top misspelled word number 1
+    //char top2[MAX_SIZE]; //Top misspelled word number 2
+    //char top3[MAX_SIZE]; //Top misspelled word number 3
+    //memset(top1, 0, MAX_SIZE+1);
+    //memset(top2, 0, MAX_SIZE+1);
+    //memset(top3, 0, MAX_SIZE+1);
+    //int max1;
+    //int max2;
+    //int max3;
+    struct dict_word* top1;
+    struct dict_word* top2;
+    struct dict_word* top3;
     int total = 0; // Total number of words in dictionary
-    int dSize = sizeof(dict); //Size of dictionary (in bytes)
+    int dSize =  sizeof(struct dictionary) + sizeof(struct dict_word) * dict->num_words; //Size of dictionary (in bytes)
+    //printf("%d  %d  %d\n", (int)sizeof(struct dictionary), (int) sizeof(struct dict_word), dict->num_words);
+
     int mSize = 0; //Size of misspelled word list (in bytes)
-    int num_mis = 0; //Total number of misspelled words: 5
-    if(currWord != NULL)
+    int num_mis = 0; //Total number of misspelled words found in text
+
+    // Then Initialize the top 3 words
+    if(currWord != NULL) {
+        top1 = currWord;
+        top2 = currWord;
+        top2 = currWord;
+    } else {
+        return ;
+    }
+
+
+
+    while(currWord != NULL)
     {
+
         total ++;
-        dSize += sizeof(currWord);
 
         //char line[MAX_SIZE];
         int i;
@@ -174,61 +191,84 @@ void printWords(struct dict_word* currWord){ //, FILE* f){ XINGHAN
 
 
         // update top 3 misspelled if necessary
-        if(currWord->misspelled_count >= max1) {
-            max3 = max2;
-            memset(top3, 0, MAX_SIZE+1);
-            strcpy(top3, top2);
-            max2 = max1;
-            memset(top2, 0, MAX_SIZE+1);
-            strcpy(top2, top1);
-            max1 = currWord->misspelled_count;
-            memset(top1, 0, MAX_SIZE+1);
-            strcpy(top1, currWord->word);
+        if(currWord->misspelled_count >= top1->misspelled_count) {
+            top3 = top2;
+            top2 = top1;
+            top1 = currWord;
 
-        } else if (currWord->misspelled_count >= max2) {
-            max3 = max2;
-            memset(top3, 0, MAX_SIZE+1);
-            strcpy(top3, top2);
-            max2 = currWord->misspelled_count;
-            memset(top2, 0, MAX_SIZE+1);
-            strcpy(top2, currWord->word);
+        } else if (currWord->misspelled_count >= top2->misspelled_count) {
+            top3 = top2;
+            top2 = currWord;
 
-
-        } else if (currWord->misspelled_count >= max3) {
-            max3 = currWord->misspelled_count;
-            memset(top3, 0, MAX_SIZE+1);
-            strcpy(top3, currWord->word);
-
+        } else if (currWord->misspelled_count >= top3->misspelled_count) {
+            top3 = currWord;
         }
 
         for(i = 0; i<currWord->num_misspellings; i++)
         {
-            num_mis++;
-            mSize += sizeof((currWord->misspelled)[i]);
-            //sprintf(line, "\tMISPELLED WORD #%d: %s\n", i,((currWord->misspelled)[i])->word);
-            //fwrite(line, strlen(line)+1, 1, f);
+            if((currWord->misspelled)[i]->misspelled)
+                num_mis++;
+            mSize += sizeof(struct misspelled_word);
+        }
 
-            //sprintf(line,"\t\tMISPELLED?: %d\n", ((currWord->misspelled)[i])->misspelled);
-            //fwrite(line, strlen(line)+1, 1, f);
-
-            //sprintf(line, "\t\tACTUAL WORD: %s\n", ((currWord->misspelled)[i])->correct_word->word); //XINGHAN
-            //fwrite(line, strlen(line)+1, 1, f);
-
-            if(((currWord->misspelled)[i])->next->word != NULL)
-            {
-                //sprintf(line, "\t\tNEXT MISPELLED WORD: %s\n", ((currWord->misspelled)[i])->next->word);
-                //fwrite(line, strlen(line)+1, 1, f);
+        currWord = currWord->next;
+    }
+    fprintf(stderr, "Total number of words in dictionary: %d\n", total);
+    fprintf(stderr, "Size of dictionary (in bytes): %d\n", dSize);
+    fprintf(stderr, "Size of misspelled word list (in bytes): %d\n", mSize);
+    fprintf(stderr, "Total number of misspelled words: %d\n", num_mis);
+    if(num_mis > 0){
+        fprintf(stderr, "Top 3 misspelled words: \n");
+        int i;
+        char temp[MAX_SIZE];
+        fprintf(stderr, "%s (%d times):", top1->word, top1->misspelled_count);
+        memset(temp, 0, MAX_SIZE+1);
+        for(i = 0; i<top1->num_misspellings; i++)
+        {
+            if((top1->misspelled)[i]-> misspelled){
+                strcat(temp, " ");
+                strcat(temp, (top1->misspelled)[i]->word);
+                strcat(temp, ",");
             }
         }
+        if(strlen(temp) > 0)
+            temp[strlen(temp) - 1] = '\n';
+        else
+            temp[0] = '\n';
+        fprintf(stderr, "%s", temp);
 
-        if((currWord->next)->word != NULL)
+        fprintf(stderr, "%s (%d times):", top2->word, top2->misspelled_count);
+        memset(temp, 0, MAX_SIZE+1);
+        for(i = 0; i<top2->num_misspellings; i++)
         {
-            //sprintf(line,"\tNEXT WORD: %s\n", (currWord->next)->word);
-            //fwrite(line, strlen(line)+1, 1, f);
+            if((top2->misspelled)[i]->misspelled){
+                strcat(temp, " ");
+                strcat(temp, (top2->misspelled)[i]->word);
+                strcat(temp, ",");
+            }
         }
+        if(strlen(temp) > 0)
+        temp[strlen(temp) - 1] = '\n';
+        else
+            temp[0] = '\n';
+        fprintf(stderr, "%s", temp);
+
+        fprintf(stderr, "%s (%d times):", top3->word, top3->misspelled_count);
+        memset(temp, 0, MAX_SIZE+1);
+        for(i = 0; i<top3->num_misspellings; i++)
+        {
+            if((top3->misspelled)[i]->misspelled) {
+                strcat(temp, " ");
+                strcat(temp, (top3->misspelled)[i]->word);
+                strcat(temp, ",");
+            }
+        }
+        if(strlen(temp) > 0)
+            temp[strlen(temp) - 1] = '\n';
+        else
+            temp[0] = '\n';
+        fprintf(stderr, "%s", temp);
     }
-
-
 }
 
 void processWord(char* inputWord){
@@ -314,7 +354,8 @@ void processWord(char* inputWord){
             }
 
             addWord(newWord, inputWord);
-            dict->word_list = newWord;
+            dict->num_words++;
+            //dict->word_list = newWord;
             // Update dFlag since the dictionary is modified
             dFlag = 1;
 
