@@ -11,12 +11,12 @@ int main(int argc, char *argv[]){
         return EXIT_FAILURE;
     }
 
-    if((m_list = (struct misspelled_word*) malloc(sizeof(struct misspelled_word*))) == NULL)
+    /*if((m_list = (struct misspelled_word*) malloc(sizeof(struct misspelled_word*))) == NULL)
     {
         printf("ERROR: OUT OF MEMORY.\n");
         return EXIT_FAILURE;
-    }
-    //m_list = NULL;
+    }*/
+    m_list = NULL;
 
     struct Args args;
     // Set struct default values
@@ -109,12 +109,16 @@ int main(int argc, char *argv[]){
 
     // handle -h exit
     if(helpFlag == 1) {
-        //free word list
-        freeWords(dict->word_list);
-        //free dictionary
-        free(dict);
-        //free m_list
-        freeMList(m_list);
+        if(dict !=NULL){
+            //free word list
+            freeWords(dict->word_list);
+            //free dictionary
+            free(dict);
+        }
+        if(m_list!=NULL){
+            //free m_list
+            freeMList(m_list);
+        }
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
         return EXIT_SUCCESS;
@@ -123,12 +127,16 @@ int main(int argc, char *argv[]){
     // handle incorrect -An input
     if(nFlag == 1) {
         USAGE();
-        //free word list
-        freeWords(dict->word_list);
-        //free dictionary
-        free(dict);
-        //free m_list
-        freeMList(m_list);
+        if(dict !=NULL){
+            //free word list
+            freeWords(dict->word_list);
+            //free dictionary
+            free(dict);
+        }
+        if(m_list!=NULL){
+            //free m_list
+            freeMList(m_list);
+        }
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
         return EXIT_FAILURE;
@@ -140,12 +148,16 @@ int main(int argc, char *argv[]){
     {
         //printf("Unable to open: %s.\n", args.input); XINGHAN
         USAGE();
-        //free word list
-        freeWords(dict->word_list);
-        //free dictionary
-        free(dict);
-        //free m_list
-        freeMList(m_list);
+        if(dict !=NULL){
+            //free word list
+            freeWords(dict->word_list);
+            //free dictionary
+            free(dict);
+        }
+        if(m_list!=NULL){
+            //free m_list
+            freeMList(m_list);
+        }
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
         if(dFile != NULL) fclose(dFile);
@@ -155,12 +167,16 @@ int main(int argc, char *argv[]){
     {
         //printf("Unable to open: %s.\n", args.dictFile); XINGHAN
         USAGE();
-        //free word list
-        freeWords(dict->word_list);
-        //free dictionary
-        free(dict);
-        //free m_list
-        freeMList(m_list);
+        if(dict !=NULL){
+            //free word list
+            freeWords(dict->word_list);
+            //free dictionary
+            free(dict);
+        }
+        if(m_list!=NULL){
+            //free m_list
+            freeMList(m_list);
+        }
         if(iFile != NULL) fclose(iFile);
         if(oFile != NULL) fclose(oFile);
         return EXIT_FAILURE;
