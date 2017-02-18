@@ -227,14 +227,13 @@ int main(int argc, char *argv[]){
                 memset(back, 0, MAX_SIZE+1);
 
                 // handle punct
-                char* punctb = punctb = wdPtr-1;
+                char* punctb = wdPtr-1;
                 while(!((*punctb>='a' && *punctb<='z') || (*punctb>='A' && *punctb<='Z')) && punctb >= word)
                 {
                     punctb--;
                 }
                 if(++punctb > word) {
-                    //memset(back, 0, MAX_SIZE+1);
-                    //int shift = punctb-wdPtr;
+                    // It always complains about this punctb pointer, dont know how to fix
                     strcpy(back, punctb);
                     *punctb = '\0';
                 }
