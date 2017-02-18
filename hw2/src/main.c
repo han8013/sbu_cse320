@@ -10,6 +10,8 @@ int main(int argc, char *argv[]){
         printf("ERROR: OUT OF MEMORY.\n");
         return EXIT_FAILURE;
     }
+    dict->num_words = 0;
+    dict->word_list = NULL;
 
     /*if((m_list = (struct misspelled_word*) malloc(sizeof(struct misspelled_word*))) == NULL)
     {
@@ -23,7 +25,7 @@ int main(int argc, char *argv[]){
     args.d = false;
     args.i = false;
     args.o = false;
-    memset(args.dictFile, 0, MAX_SIZE+1);
+    //memset(args.dictFile, 0, MAX_SIZE+1);
     strcpy(args.dictFile, DEFAULT_DICT_FILE);
     aFlag = 0;
     dFlag = 0;
@@ -195,7 +197,6 @@ int main(int argc, char *argv[]){
     {
         char word[MAX_SIZE];
         char* wdPtr = word;
-        //char line[MAX_SIZE];
         char* character = line;
 
         memset(line, 0, MAX_SIZE + 1);
