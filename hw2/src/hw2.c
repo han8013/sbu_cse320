@@ -197,10 +197,15 @@ void printWords(struct dict_word* currWord){ //, FILE* f){ XINGHAN
             topCount++;
         }
 
+        if(currWord->misspelled_count > 0) {
+            num_mis++;
+        }
+
+        //printf("test:%d\n", currWord->num_misspellings);
         for(i = 0; i<currWord->num_misspellings; i++)
         {
-            if((currWord->misspelled)[i]->misspelled)
-                num_mis++;
+            //if((currWord->misspelled)[i]->misspelled)
+                //num_mis++;
             mSize += sizeof(struct misspelled_word);
         }
 
