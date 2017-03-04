@@ -328,6 +328,7 @@ int main(int argc, char *argv[]){
     free(dict);
     //free m_list
     freeMList(m_list);
+    //free(m_list);
 
     fclose(dFile);
     fclose(iFile);

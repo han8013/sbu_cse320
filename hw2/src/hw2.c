@@ -74,8 +74,8 @@ void processDictionary(FILE* f){
             }
         }
     }
-    if(currWord!=NULL)
-        free(currWord);
+    //if(currWord!=NULL)
+    //    free(currWord);
 }
 
 void addWord(struct dict_word* dWord, char* word){
@@ -158,12 +158,13 @@ void printWords(struct dict_word* currWord){ //, FILE* f){ XINGHAN
     int dSize =  sizeof(struct dictionary) + sizeof(struct dict_word) * dict->num_words; //Size of dictionary (in bytes)
     int mSize = 0; //Size of misspelled word list (in bytes)
     int num_mis = 0; //Total number of misspelled words found in text
+    int topCount = 0; //Total number of words trying to get into top list(max is 3)
 
     // Then Initialize the top 3 words
     if(currWord != NULL) {
         top1 = currWord;
-        top2 = currWord;
-        top2 = currWord;
+        top2 = NULL;
+        top3 = NULL;
     } else {
         return ;
     }
@@ -180,17 +181,20 @@ void printWords(struct dict_word* currWord){ //, FILE* f){ XINGHAN
 
 
         // update top 3 misspelled if necessary
-        if(currWord->misspelled_count >= top1->misspelled_count) {
+        if(currWord->misspelled_count >= top1->misspelled_count || topCount < 1) {
             top3 = top2;
             top2 = top1;
             top1 = currWord;
+            topCount++;
 
-        } else if (currWord->misspelled_count >= top2->misspelled_count) {
+        } else if (currWord->misspelled_count >= top2->misspelled_count || topCount < 2) {
             top3 = top2;
             top2 = currWord;
+            topCount++;
 
-        } else if (currWord->misspelled_count >= top3->misspelled_count) {
+        } else if (currWord->misspelled_count >= top3->misspelled_count || topCount < 3) {
             top3 = currWord;
+            topCount++;
         }
 
         for(i = 0; i<currWord->num_misspellings; i++)
@@ -443,6 +447,7 @@ void freeMList(struct misspelled_word* mw) {
     if(mw != NULL)
     {
         freeMList(mw->next);
+        //mw->next == NULL;
         free(mw);
     }
 }
