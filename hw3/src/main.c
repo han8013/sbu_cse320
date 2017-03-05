@@ -55,9 +55,9 @@ int main(int argc, char *argv[]) {
     sf_mem_init(MAX_HEAP_SIZE);
 
     // Tell the user about the fields
+
     info("Initialized heap with %dmb of heap space.\n", MAX_HEAP_SIZE >> 20);
     press_to_cont();
-
     // Print out title for first test
     printf("=== Test1: Allocation test ===\n");
     // Test #1: Allocate an integer
