@@ -33,7 +33,8 @@ int main(int argc, char *argv[]){
 
     // Make a loop index
     //int i;
-    char line[MAX_SIZE];
+    char line[MAX_SIZE] = {0};
+    memset(line, 0, MAX_SIZE);
     //Declare Files
     FILE* dFile;
     FILE* iFile = DEFAULT_INPUT;
@@ -195,8 +196,10 @@ int main(int argc, char *argv[]){
 
     while(!feof(iFile))
     {
-        char word[MAX_SIZE];
-        char* wdPtr = word;
+        char word[MAX_SIZE] = {0};
+        char* wdPtr = NULL;
+        wdPtr = word;
+        char line[MAX_SIZE] = {0};
         char* character = line;
 
         memset(line, 0, MAX_SIZE + 1);
@@ -219,22 +222,23 @@ int main(int argc, char *argv[]){
         {
             if(*character == ' ' || *character == '\n')
              {
-                char front[MAX_SIZE];
-                char mid[MAX_SIZE];
-                char back[MAX_SIZE];
+                char front[MAX_SIZE] = {0};
+                char mid[MAX_SIZE] = {0};
+                char back[MAX_SIZE] = {0};
                 memset(front, 0, MAX_SIZE+1);
                 memset(mid, 0, MAX_SIZE+1);
                 memset(back, 0, MAX_SIZE+1);
 
                 // handle punct
-                char* punctb = wdPtr-1;
+                char* punctb = NULL;
+                punctb = wdPtr-1;
                 while(!((*punctb>='a' && *punctb<='z') || (*punctb>='A' && *punctb<='Z')) && punctb >= word)
                 {
                     punctb--;
                 }
                 if(++punctb > word) {
                     // It always complains about this punctb pointer, dont know how to fix
-                    strcpy(back, punctb);
+                    strcpy(back, punctb);//strcpy(word, wdPtr);//strcpy(back, punctb);
                     *punctb = '\0';
                 }
                 char* punctf = word;
@@ -314,13 +318,9 @@ int main(int argc, char *argv[]){
 
 
 
-    //strcpy(line, "\n--------DICTIONARY WORDS--------\n");
-    //fwrite(line, strlen(line)+1, 1, oFile);
-    printWords(dict->word_list);// , oFile); XINGHAN
 
-    //printf("\n--------FREED WORDS--------\n");
-    //strcpy(line, "\n--------FREED WORDS--------\n");
-    //fwrite(line, strlen(line)+1, 1, oFile);
+    printWords(dict->word_list);
+
 
     //free word list
     freeWords(dict->word_list);
@@ -328,6 +328,7 @@ int main(int argc, char *argv[]){
     free(dict);
     //free m_list
     freeMList(m_list);
+    //free(m_list);
 
     fclose(dFile);
     fclose(iFile);
