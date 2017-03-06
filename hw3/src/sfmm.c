@@ -38,7 +38,7 @@ sf_free_header* freelist_head = NULL;
 void *start;
 void *end;
 int is_start = 0;
-
+int sbrk_time = 1;
 
 void *sf_malloc(size_t size) {
 	void *bp = NULL;
@@ -50,8 +50,10 @@ void *sf_malloc(size_t size) {
 	}
 	if (is_start == 0){
 		/* request heap by sbrk*/
-		end = sf_sbrk(1);
-		start = end-4096;
+		start = sf_sbrk(0);
+
+		start = sf_sbrk(1);
+		end = sf_sbrk(0);
 		void* start_head = start;
 		/* set free list head */
 		freelist_head = (sf_free_header*)start_head;
@@ -64,7 +66,7 @@ void *sf_malloc(size_t size) {
 		freelist_head->next = NULL;
 		freelist_head->prev = NULL;
 		/* set free list footer*/
-		void *end_footer = end - 8;
+		void *end_footer = (char*)end - 8;
 		sf_footer *firstfree_footer = (sf_footer*) end_footer;
 		firstfree_footer->alloc = 0;
 		firstfree_footer->splinter = 0;
@@ -86,17 +88,22 @@ void *sf_malloc(size_t size) {
 			bp = best_fit(block_size);
 			if (bp != NULL) {
 				place(bp, block_size,padding_size);
-				return (bp+8);
+				return ((char*)bp+8);
 			}else{
 				/* No fit found.Get more memory and place the block. */
-				end = sf_sbrk(1);
+				if (sbrk_time<4)
+				{
+				void *old_end = sf_sbrk(1);
+				end = sf_sbrk(0);
 				if (end == NULL){
 					return NULL;
 				}
-				set_freeheader(end-4096,4096); /* need add new free header to freelist*/
-				set_freefooter(end-8,4096);
-				insert_in_freelist(end-4096);
-				coalesce(end-4096);
+				set_freeheader(old_end,4096); /* need add new free header to freelist*/
+				set_freefooter((char*)end-8,4096);
+				insert_in_freelist(old_end);
+				coalesce(old_end);
+				}
+
 			}
 		}
 	return NULL;
@@ -105,7 +112,7 @@ void *sf_malloc(size_t size) {
 void coalesce(void *bp){
 	/* bp is current location of pointer */
 	size_t s = get_size(bp);
-	void *end_footer = (bp+s);
+	void *end_footer = ((char*)bp+s);
 
 	int next_is_alloc = get_alloc(get_next(bp)) || end_footer == end;
 	int prev_is_alloc = get_alloc(get_prev(bp)) || bp == start;
@@ -115,33 +122,34 @@ void coalesce(void *bp){
 	/* case 1: only next is free block */
 	if (prev_is_alloc && !next_is_alloc){
 		sf_free_header *next_header = (sf_free_header*) get_next(bp);
-		size_t size = get_size(bp) + next_header->header.block_size;
+		size_t size = get_size(bp) + (next_header->header.block_size<<4);
 		set_freeheader(bp,size);
-		set_freefooter(bp,size);
+		void *footer_location = (char*)bp-size+8;
+		set_freefooter(footer_location,size);
 		remove_from_freelist(next_header);
 
 	}
 	/* case 2: only prev is free block */
 	else if (!prev_is_alloc && next_is_alloc){
 		sf_free_header *prev_header = (sf_free_header*) get_prev(bp);
-		size_t size = get_size(bp) + prev_header->header.block_size;
+		size_t size = get_size(bp) + (prev_header->header.block_size <<4);
 		// void* prev_header = (void*)prev_footer + 8 - get_size(prev_footer);
 		remove_from_freelist(prev_header);
 		bp = prev_header;
 		set_freeheader(bp,size);
-		set_freefooter(bp,size);
+		set_freefooter((char*)bp-size+8, size);
 
 	}
 	/* case 3: both prev and next are free block */
 	else if (!prev_is_alloc && !next_is_alloc){
 		sf_free_header *prev_free = (sf_free_header*) get_prev(bp);
 		sf_free_header *next_free = (sf_free_header*) get_next(bp);
-		size_t size = get_size(bp) + prev_free->header.block_size + next_free->header.block_size;
+		size_t size = get_size(bp) + (prev_free->header.block_size<<4) + (next_free->header.block_size<<4);
 		remove_from_freelist(prev_free);
 		remove_from_freelist(next_free);
 		bp = prev_free;
 		set_freeheader(bp,size);
-		set_freefooter(bp,size);
+		set_freefooter((char*)bp-size+8,size);
 	}
 	insert_in_freelist(bp);
 
@@ -149,11 +157,11 @@ void coalesce(void *bp){
 
 
 void *get_next(void *bp){
-	return bp+get_size(bp);
+	return (char*)bp+get_size(bp);
 }
 
 void *get_prev(void *bp){
-	return bp-get_size(bp-8);
+	return (char*)bp-get_size((char*)bp-8);
 }
 
 size_t get_alloc(void* bp){
@@ -203,11 +211,11 @@ void place(void *bp, size_t needed_size, size_t padding_size){
 	if (total_free-needed_size>=32){
 		size_t new_free = total_free-needed_size;
 		set_header(bp,needed_size,padding_size,0);
-		set_footer(bp,needed_size,0);
+		set_footer((char*)bp-needed_size+8,needed_size,0);
 		remove_from_freelist(bp);
-		bp = bp + needed_size;
+		bp = (char*)bp + needed_size;
 		set_freeheader(bp,new_free);
-		set_freefooter(bp,new_free);
+		set_freefooter((char*)bp-new_free+8,new_free);
 		insert_in_freelist(bp);
 
 		// if (freelist_head == NULL)
@@ -219,7 +227,7 @@ void place(void *bp, size_t needed_size, size_t padding_size){
 	else if (total_free-needed_size<32){
 		size_t splinter_size = total_free-needed_size;
 		set_header(bp,total_free,padding_size,splinter_size);
-		set_footer(bp,total_free,splinter_size);
+		set_footer((char*)bp-total_free+8,total_free,splinter_size);
 		remove_from_freelist(bp);
 	}
 }
@@ -289,7 +297,7 @@ void set_header(void *bp, size_t block_size, size_t padding, size_t splinter_siz
 }
 
 void set_footer(void *bp, size_t block_size,size_t splinter_size){
-	sf_footer* new_footer = (sf_footer*) (bp+block_size-8);
+	sf_footer* new_footer = (sf_footer*) bp;
 	new_footer->alloc = 1;
 	new_footer->block_size = block_size>>4;
 	if (splinter_size!=0){
@@ -324,6 +332,16 @@ void *sf_realloc(void *ptr, size_t size) {
 }
 
 void sf_free(void* ptr) {
+	/* chcek if is null*/
+	if (ptr == NULL){
+		return;
+	}
+	size_t free_size = get_size(ptr);
+	set_freeheader(ptr,free_size);
+	void *footer_location = (char*)ptr-free_size+8;
+	set_freefooter(footer_location,free_size);
+	coalesce(ptr);
+
 
 }
 
