@@ -235,6 +235,9 @@ void printWords(struct dict_word* currWord){ //, FILE* f){ XINGHAN
             temp[0] = '\n';
         fprintf(stderr, "%s", temp);
 
+
+        if(top2 == NULL)
+            top2 = top1;
         fprintf(stderr, "%s (%d times):", top2->word, top2->misspelled_count);
         memset(temp, 0, MAX_SIZE+1);
         for(i = 0; i<top2->num_misspellings; i++)
@@ -251,6 +254,9 @@ void printWords(struct dict_word* currWord){ //, FILE* f){ XINGHAN
             temp[0] = '\n';
         fprintf(stderr, "%s", temp);
 
+
+        if(top3 == NULL)
+            top3 = top2;
         fprintf(stderr, "%s (%d times):", top3->word, top3->misspelled_count);
         memset(temp, 0, MAX_SIZE+1);
         for(i = 0; i<top3->num_misspellings; i++)
