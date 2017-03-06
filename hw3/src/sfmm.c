@@ -7,40 +7,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-/* Basic constants and macros */
-#define WSIZE sizeof(void *) /* Word and header/footer size (bytes) */
-#define DSIZE (2*WSIZE) /* Double word size (bytes) */
-#define PAGE (4096) /* Extend heap by this amount (bytes) */
-
-#define MAX(x, y) ((x) > (y)? (x) : (y))
-
-/* Pack a size and allocated bit into a word */
-#define PACK(size, alloc) ((size) | (alloc))
-
-/* Read and write a word at address p */
-#define GET(p) (*(unsigned int *)(p))
-#define PUT(p, val) (*(unsigned int *)(p) = (val))
-
-/* Read the size and allocated fields from address p */
-#define GET_SIZE(p) (GET(p) & 0xfffffff0)
-#define GET_ALLOC(p) (p & 0x1)
-
-/* Given block ptr bp, compute address of its header and footer */
-#define HDRP(bp) ((char *)(bp) - WSIZE)
-#define FTRP(bp) ((char *)(bp) + GET_SIZE(HDRP(bp)) - DSIZE)
-
-/* Given block ptr bp, compute address of next and previous blocks */
-#define NEXT_BLOCK(bp) ((char *)(bp) + GET_SIZE((char *)bp)
-#define PREV_BLOCK(bp) ((char *)(bp) - GET_SIZE(((char *)(bp) - WSIZE)))
-
 size_t get_alignsize(size_t size);
 size_t get_padding_size(size_t size);
 
 
 void coalesce(void *bp);
 void *best_fit(size_t block_size);
-void place(void *bp, size_t block_size, size_t padding_size);
+void place(void *bp, size_t needed_size, size_t padding_size);
 void insert_in_freelist(void *bp);
 void remove_from_freelist(void *bp);
 
@@ -53,7 +26,6 @@ void *get_next(void *bp);
 void *get_prev(void *bp);
 size_t get_alloc(void* bp);
 size_t get_size(void* bp);
-
 
 
 /**
@@ -80,8 +52,9 @@ void *sf_malloc(size_t size) {
 		/* request heap by sbrk*/
 		end = sf_sbrk(1);
 		start = end-4096;
+		void* start_head = start;
 		/* set free list head */
-		freelist_head = (sf_free_header*)start;
+		freelist_head = (sf_free_header*)start_head;
 		freelist_head->header.alloc = 0;
 		freelist_head->header.splinter = 0;
 		freelist_head->header.block_size = (4096>>4);
@@ -91,8 +64,8 @@ void *sf_malloc(size_t size) {
 		freelist_head->next = NULL;
 		freelist_head->prev = NULL;
 		/* set free list footer*/
-		void *end_heap = end - 8;
-		sf_footer *firstfree_footer = (sf_footer*) end_heap;
+		void *end_footer = end - 8;
+		sf_footer *firstfree_footer = (sf_footer*) end_footer;
 		firstfree_footer->alloc = 0;
 		firstfree_footer->splinter = 0;
 		firstfree_footer->block_size = (4096>>4);
@@ -120,48 +93,49 @@ void *sf_malloc(size_t size) {
 				if (end == NULL){
 					return NULL;
 				}
-				set_freeheader(end-4096,4096);
+				set_freeheader(end-4096,4096); /* need add new free header to freelist*/
 				set_freefooter(end-8,4096);
+				insert_in_freelist(end-4096);
 				coalesce(end-4096);
 			}
-
 		}
 	return NULL;
 }
 
 void coalesce(void *bp){
-
+	/* bp is current location of pointer */
 	size_t s = get_size(bp);
-	void *test = (bp+s);
+	void *end_footer = (bp+s);
 
-	int next_is_alloc = get_alloc(get_next(bp)) || test == end;
+	int next_is_alloc = get_alloc(get_next(bp)) || end_footer == end;
 	int prev_is_alloc = get_alloc(get_prev(bp)) || bp == start;
 	// size_t free_size = get_size(bp);
-	sf_free_header *free_block = (sf_free_header*) bp;
+	// sf_free_header *free_block = (sf_free_header*) bp;
 
-	/* case 1 only next is free block */
+	/* case 1: only next is free block */
 	if (prev_is_alloc && !next_is_alloc){
-		sf_free_header *next_free = free_block->next;
-		size_t size = get_size(bp) + next_free->header.block_size;
+		sf_free_header *next_header = (sf_free_header*) get_next(bp);
+		size_t size = get_size(bp) + next_header->header.block_size;
 		set_freeheader(bp,size);
 		set_freefooter(bp,size);
-		remove_from_freelist(next_free);
+		remove_from_freelist(next_header);
 
 	}
-	/* case 2 only prev is free block */
+	/* case 2: only prev is free block */
 	else if (!prev_is_alloc && next_is_alloc){
-		sf_footer *prev_free = (sf_footer*)((void*)free_block - 8);
-		size_t size = get_size(bp) + prev_free->block_size;
-		remove_from_freelist((void*)prev_free + 8 - get_size(prev_free));
-		bp = prev_free;
+		sf_free_header *prev_header = (sf_free_header*) get_prev(bp);
+		size_t size = get_size(bp) + prev_header->header.block_size;
+		// void* prev_header = (void*)prev_footer + 8 - get_size(prev_footer);
+		remove_from_freelist(prev_header);
+		bp = prev_header;
 		set_freeheader(bp,size);
 		set_freefooter(bp,size);
 
 	}
-	/* case 3 both prev and next are free block */
+	/* case 3: both prev and next are free block */
 	else if (!prev_is_alloc && !next_is_alloc){
-		sf_free_header *prev_free = free_block->prev;
-		sf_free_header *next_free = free_block->next;
+		sf_free_header *prev_free = (sf_free_header*) get_prev(bp);
+		sf_free_header *next_free = (sf_free_header*) get_next(bp);
 		size_t size = get_size(bp) + prev_free->header.block_size + next_free->header.block_size;
 		remove_from_freelist(prev_free);
 		remove_from_freelist(next_free);
@@ -183,11 +157,11 @@ void *get_prev(void *bp){
 }
 
 size_t get_alloc(void* bp){
-	return (*(unsigned*)(bp)) & 0x1;
+	return (*(unsigned long*)(bp)) & 0x1;
 }
 
 size_t get_size(void* bp){
-	return (*(unsigned*)bp) & 0xfffffff0;
+	return (*(unsigned long*)bp) & 0xfffffff0;
 }
 
 void *best_fit(size_t block_size){
@@ -210,39 +184,45 @@ void *best_fit(size_t block_size){
 				found_free = top_free;
 				min_size = current_size;
 			}
+			else if (current_size == min_size)
+			{
+				if (found_free < top_free)
+				{
+					found_free = top_free;
+				}
+			}
 		}
 	}
 	return found_free;
 }
 
-void place(void *bp, size_t block_size, size_t padding_size){
+void place(void *bp, size_t needed_size, size_t padding_size){
 	sf_free_header *found = (sf_free_header*) bp;
 	size_t total_free = found->header.block_size<<4;
 	/* check if split block*/
-	if (total_free-block_size>=32){
-		size_t new_free = total_free-block_size;
-		set_header(bp,block_size,padding_size,0);
-		set_footer(bp,block_size,0);
+	if (total_free-needed_size>=32){
+		size_t new_free = total_free-needed_size;
+		set_header(bp,needed_size,padding_size,0);
+		set_footer(bp,needed_size,0);
 		remove_from_freelist(bp);
-		bp = bp + block_size;
+		bp = bp + needed_size;
 		set_freeheader(bp,new_free);
 		set_freefooter(bp,new_free);
+		insert_in_freelist(bp);
 
-		if (freelist_head == NULL)
-		{
-			insert_in_freelist(bp);
-		}
+		// if (freelist_head == NULL)
+		// {
+		// 	insert_in_freelist(bp);
+		// }
 		// coalesce(bp);
 	}
-	else if (total_free-block_size<32){
-		size_t splinter_size = total_free-block_size;
+	else if (total_free-needed_size<32){
+		size_t splinter_size = total_free-needed_size;
 		set_header(bp,total_free,padding_size,splinter_size);
 		set_footer(bp,total_free,splinter_size);
 		remove_from_freelist(bp);
 	}
-
 }
-
 
 /*Inserts the free block pointer int the free_list*/
 void insert_in_freelist(void *bp){
@@ -253,10 +233,10 @@ void insert_in_freelist(void *bp){
 		freelist_head->next = NULL;
 	}
 	else{
-	insert->next = freelist_head;
-	freelist_head->prev = insert;
-	insert->prev = NULL;
-	freelist_head = insert;
+		insert->next = freelist_head;
+		freelist_head->prev = insert;
+		insert->prev = NULL;
+		freelist_head = insert;
 	}
 }
 /*Removes the free block pointer int the free_list*/
@@ -338,9 +318,6 @@ size_t get_padding_size(size_t size){
 	else
 		return (16-size%16);
 }
-
-
-
 
 void *sf_realloc(void *ptr, size_t size) {
 	return NULL;

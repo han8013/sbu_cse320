@@ -66,10 +66,10 @@ int main(int argc, char *argv[]) {
     payload_check(value1);
     // Print out the allocator block
     sf_varprint(value1);
-    // press_to_cont();
+    press_to_cont();
 
     // // Now assign a value
-    // printf("=== Test2: Assignment test ===\n");
+    printf("=== Test2: Assignment test ===\n");
     info("Attempting to assign value1 = %d\n", VALUE1_VALUE);
     // Assign the value
     *value1 = VALUE1_VALUE;
