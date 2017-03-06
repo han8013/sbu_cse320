@@ -150,9 +150,9 @@ void coalesce(void *bp){
 	}
 	/* case 2 only prev is free block */
 	else if (!prev_is_alloc && next_is_alloc){
-		sf_free_header *prev_free = free_block->prev;
-		size_t size = get_size(bp) + prev_free->header.block_size;
-		remove_from_freelist(prev_free);
+		sf_footer *prev_free = (sf_footer*)((void*)free_block - 8);
+		size_t size = get_size(bp) + prev_free->block_size;
+		remove_from_freelist((void*)prev_free + 8 - get_size(prev_free));
 		bp = prev_free;
 		set_freeheader(bp,size);
 		set_freefooter(bp,size);
@@ -183,7 +183,7 @@ void *get_prev(void *bp){
 }
 
 size_t get_alloc(void* bp){
-	return (*(int*)(bp)) & 0x1;
+	return (*(unsigned*)(bp)) & 0x1;
 }
 
 size_t get_size(void* bp){
@@ -232,7 +232,7 @@ void place(void *bp, size_t block_size, size_t padding_size){
 		{
 			insert_in_freelist(bp);
 		}
-		coalesce(bp);
+		// coalesce(bp);
 	}
 	else if (total_free-block_size<32){
 		size_t splinter_size = total_free-block_size;
