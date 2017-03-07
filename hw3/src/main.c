@@ -66,6 +66,7 @@ int main(int argc, char *argv[]) {
     payload_check(value1);
     // Print out the allocator block
     sf_varprint(value1);
+    sf_snapshot(true);
     press_to_cont();
 
     // Now assign a value
@@ -82,6 +83,7 @@ int main(int argc, char *argv[]) {
     long *value2 = sf_malloc(sizeof(long));
     null_check(value2, sizeof(long));
     payload_check(value2);
+    sf_snapshot(true);
     // Assign a value
     *value2 = VALUE2_VALUE;
     // Check value
@@ -107,9 +109,10 @@ int main(int argc, char *argv[]) {
     // Allocate more memory
     printf("=== Test7: 8192 byte allocation ===\n");
     void *memory = sf_malloc(8192);
+    sf_snapshot(true);
     sf_free(memory);
     press_to_cont();
-
+    sf_snapshot(true);
     sf_mem_fini();
 
     return EXIT_SUCCESS;

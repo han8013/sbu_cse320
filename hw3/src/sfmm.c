@@ -95,6 +95,7 @@ void *sf_malloc(size_t size) {
 				{
 				void *old_end = sf_sbrk(1);
 				end = sf_sbrk(0);
+				old_end = (char*)end-4096;
 				if (end == NULL){
 					return NULL;
 				}
@@ -218,11 +219,6 @@ void place(void *bp, size_t needed_size, size_t padding_size){
 		set_freefooter((char*)bp+new_free-8,new_free);
 		insert_in_freelist(bp);
 
-		// if (freelist_head == NULL)
-		// {
-		// 	insert_in_freelist(bp);
-		// }
-		// coalesce(bp);
 	}
 	else if (total_free-needed_size<32){
 		size_t splinter_size = total_free-needed_size;
@@ -242,22 +238,43 @@ void insert_in_freelist(void *bp){
 	}
 	else{
 		sf_free_header *start_free;
+		sf_free_header *end_header;
 		for (start_free = freelist_head; start_free!=NULL; start_free = start_free->next){
-			if (start_free<insert){
+			end_header = start_free;
+			if (insert<start_free)
+			{
+				insert->next = start_free;
+				start_free->prev = insert;
+				insert->prev = NULL;
+				freelist_head = insert;
+				return;
+			}
+			else if (insert==start_free)
+			{
+				return;
+			}
+			else if (start_free<insert && insert<start_free->next){
 				insert->next = start_free->next;
 				start_free->next->prev = insert;
 				insert->prev = start_free;
 				start_free->next = insert;
+				return;
 			}
 		}
+		end_header->next = insert;
+		insert->prev = end_header;
+		insert->next = NULL;
 	}
 }
 /*Removes the free block pointer int the free_list*/
 void remove_from_freelist(void *bp){
+	// sf_free_header *remove = (sf_free_header*)bp;
+	// remove->header.block_size = 0;
 	sf_free_header *prev_free = ((sf_free_header*)bp)->prev;
 	sf_free_header *next_free = ((sf_free_header*)bp)->next;
 	if (prev_free!=NULL){
 		prev_free->next = next_free;
+		((sf_free_header*)bp)->prev = NULL;
 	}
 	else{
 		freelist_head = next_free;
@@ -265,6 +282,7 @@ void remove_from_freelist(void *bp){
 	if (next_free!=NULL)
 	{
 		next_free->prev = prev_free;
+		((sf_free_header*)bp)->next = NULL;
 	}
 }
 
@@ -346,6 +364,7 @@ void sf_free(void* ptr) {
 	set_freeheader(ptr,free_size);
 	void *footer_location = (char*)ptr+free_size-8;
 	set_freefooter(footer_location,free_size);
+	insert_in_freelist(ptr);
 	coalesce(ptr);
 
 
