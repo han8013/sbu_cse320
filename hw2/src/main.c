@@ -181,7 +181,7 @@ int main(int argc, char *argv[]){
     //fwrite(line, strlen(line)+1, 1, oFile);
     while(!feof(iFile))
     {
-        char word[MAX_SIZE];
+        char word[MAX_SIZE] = {0};
         char* wdPtr = word;
         char* character = line;
         memset(line, 0, MAX_SIZE + 1);
