@@ -1,5 +1,4 @@
 #include "hw2.h"
-
 int main(int argc, char *argv[]){
     char DEFAULT_DICT_FILE[]= "rsrc/dictionary.txt";
     FILE* DEFAULT_INPUT = stdin;
@@ -12,14 +11,12 @@ int main(int argc, char *argv[]){
     }
     dict->num_words = 0;
     dict->word_list = NULL;
-
     /*if((m_list = (struct misspelled_word*) malloc(sizeof(struct misspelled_word*))) == NULL)
     {
         printf("ERROR: OUT OF MEMORY.\n");
         return EXIT_FAILURE;
     }*/
     m_list = NULL;
-
     struct Args args;
     // Set struct default values
     args.d = false;
@@ -29,19 +26,15 @@ int main(int argc, char *argv[]){
     strcpy(args.dictFile, DEFAULT_DICT_FILE);
     aFlag = 0;
     dFlag = 0;
-
-
     // Make a loop index
     //int i;
-    char line[MAX_SIZE] = {0};
-    memset(line, 0, MAX_SIZE);
+    char line[MAX_SIZE];
     //Declare Files
     FILE* dFile;
     FILE* iFile = DEFAULT_INPUT;
     FILE* oFile = DEFAULT_OUTPUT;
     //Declare number of misspelled words
     nMis = 0;
-
     /*char opt = '\0'; XINGHAN
     for(i = 1; i< argc; i++)
     {
@@ -78,7 +71,6 @@ int main(int argc, char *argv[]){
                 opt = 'o';
         }
     }*/
-
     int helpFlag = 0; //Keep track if there's h flag
     int nFlag = 0; //Keep track if anything wrong with An
     int opt = 0;
@@ -110,7 +102,6 @@ int main(int argc, char *argv[]){
                 break;
         }
     }
-
     // handle -h exit
     if(helpFlag == 1) {
         if(dict !=NULL){
@@ -127,7 +118,6 @@ int main(int argc, char *argv[]){
         if(oFile != NULL) fclose(oFile);
         return EXIT_SUCCESS;
     }
-
     // handle incorrect -An input
     if(nFlag == 1) {
         USAGE();
@@ -145,9 +135,7 @@ int main(int argc, char *argv[]){
         if(oFile != NULL) fclose(oFile);
         return EXIT_FAILURE;
     }
-
     dFile = fopen(args.dictFile, "r");
-
     if(iFile == NULL && args.i == true)
     {
         //printf("Unable to open: %s.\n", args.input); XINGHAN
@@ -188,27 +176,19 @@ int main(int argc, char *argv[]){
     else
     {
         processDictionary(dFile);
-
     }
-
     //strcpy(line,"\n--------INPUT FILE WORDS--------\n");
     //fwrite(line, strlen(line)+1, 1, oFile);
-
     while(!feof(iFile))
     {
-        char word[MAX_SIZE] = {0};
-        char* wdPtr = NULL;
-        wdPtr = word;
-        char line[MAX_SIZE] = {0};
+        char word[MAX_SIZE];
+        char* wdPtr = word;
         char* character = line;
-
         memset(line, 0, MAX_SIZE + 1);
         fgets(line, MAX_SIZE+1, iFile);
-
         //if there isn't a space or newline at the end of the line, put one there
         if((line[strlen(line)-1] != ' ') && (line[strlen(line)-1] != '\n'))
             strcat(line, " ");
-
         // change to be lower case
         int i = 0;
         while( line[i] ) {
@@ -216,29 +196,26 @@ int main(int argc, char *argv[]){
             //putchar(line[i]);
             i++;
         }
-
         //replaces spaces within a line with new lines
         while(*character != '\0') // XINGHAN
         {
             if(*character == ' ' || *character == '\n')
              {
-                char front[MAX_SIZE] = {0};
-                char mid[MAX_SIZE] = {0};
-                char back[MAX_SIZE] = {0};
+                char front[MAX_SIZE];
+                char mid[MAX_SIZE];
+                char back[MAX_SIZE];
                 memset(front, 0, MAX_SIZE+1);
                 memset(mid, 0, MAX_SIZE+1);
                 memset(back, 0, MAX_SIZE+1);
-
                 // handle punct
-                char* punctb = NULL;
-                punctb = wdPtr-1;
+                char* punctb = wdPtr-1;
                 while(!((*punctb>='a' && *punctb<='z') || (*punctb>='A' && *punctb<='Z')) && punctb >= word)
                 {
                     punctb--;
                 }
                 if(++punctb > word) {
                     // It always complains about this punctb pointer, dont know how to fix
-                    strcpy(back, punctb);//strcpy(word, wdPtr);//strcpy(back, punctb);
+                    strcpy(back, punctb);
                     *punctb = '\0';
                 }
                 char* punctf = word;
@@ -254,14 +231,11 @@ int main(int argc, char *argv[]){
                     temp = front;
                     fwrite(temp, strlen(temp)+1, 1, oFile);
                 }
-
                 wdPtr = NULL;  // XINGHAN
                 wdPtr = mid; //XINGHAN
                 if(strlen(mid) > 0){
                     processWord(wdPtr);
                 }
-
-
                 memset(word, 0, MAX_SIZE+1);
                 wdPtr = word;
                 if(strlen(mid) > 0)
@@ -270,7 +244,6 @@ int main(int argc, char *argv[]){
                     strcat(wdPtr, back);
                 strcat(wdPtr, " ");
                 fwrite(wdPtr, strlen(wdPtr)+1, 1, oFile);
-
                 memset(word, 0, MAX_SIZE + 1);
             }
             else
@@ -279,14 +252,11 @@ int main(int argc, char *argv[]){
             }
             character++;
         }
-
         strcpy(wdPtr, "\n");
         fwrite(wdPtr, strlen(wdPtr)+1, 1, oFile);
-
         if(iFile == stdin)
             break;
     }
-
     // Create new dictionary if necessary
     if(dFlag) {
         // First get the name of the new dictionary
@@ -307,7 +277,6 @@ int main(int argc, char *argv[]){
             dB++;
             strcat(newDictName, "/new_");
             strcat(newDictName, dB);
-
         } else {
             strcpy(newDictName, "new_");
             strcat(newDictName, dF);
@@ -315,21 +284,18 @@ int main(int argc, char *argv[]){
         // Then output contents
         createNewDict(newDictName);
     }
-
-
-
-
-    printWords(dict->word_list);
-
-
+    //strcpy(line, "\n--------DICTIONARY WORDS--------\n");
+    //fwrite(line, strlen(line)+1, 1, oFile);
+    printWords(dict->word_list);// , oFile); XINGHAN
+    //printf("\n--------FREED WORDS--------\n");
+    //strcpy(line, "\n--------FREED WORDS--------\n");
+    //fwrite(line, strlen(line)+1, 1, oFile);
     //free word list
     freeWords(dict->word_list);
     //free dictionary
     free(dict);
     //free m_list
     freeMList(m_list);
-    //free(m_list);
-
     fclose(dFile);
     fclose(iFile);
     fclose(oFile);
