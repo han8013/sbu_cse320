@@ -102,7 +102,11 @@ void *sf_malloc(size_t size) {
 				set_freeheader(old_end,4096); /* need add new free header to freelist*/
 				set_freefooter((char*)end-8,4096);
 				insert_in_freelist(old_end);
+				// printf("%s\n", "before coalesce---------------------------------------------------------");
+				// sf_snapshot(true);
 				coalesce(old_end);
+				// printf("%s\n", "after coalesce---------------------------------------------------------");
+				// sf_snapshot(true);
 				}
 
 			}
@@ -124,10 +128,12 @@ void coalesce(void *bp){
 	if (prev_is_alloc && !next_is_alloc){
 		sf_free_header *next_header = (sf_free_header*) get_next(bp);
 		size_t size = get_size(bp) + (next_header->header.block_size<<4);
+		remove_from_freelist(next_header);
+		// printf("%s\n", "after remove ******************************************************************");
+		// sf_snapshot(true);
 		set_freeheader(bp,size);
 		void *footer_location = (char*)bp+size-8;
 		set_freefooter(footer_location,size);
-		remove_from_freelist(next_header);
 
 	}
 	/* case 2: only prev is free block */
@@ -135,7 +141,7 @@ void coalesce(void *bp){
 		sf_free_header *prev_header = (sf_free_header*) get_prev(bp);
 		size_t size = get_size(bp) + (prev_header->header.block_size <<4);
 		// void* prev_header = (void*)prev_footer + 8 - get_size(prev_footer);
-		remove_from_freelist(prev_header);
+		remove_from_freelist(bp);
 		bp = prev_header;
 		set_freeheader(bp,size);
 		set_freefooter((char*)bp+size-8, size);
@@ -146,7 +152,7 @@ void coalesce(void *bp){
 		sf_free_header *prev_free = (sf_free_header*) get_prev(bp);
 		sf_free_header *next_free = (sf_free_header*) get_next(bp);
 		size_t size = get_size(bp) + (prev_free->header.block_size<<4) + (next_free->header.block_size<<4);
-		remove_from_freelist(prev_free);
+		remove_from_freelist(bp);
 		remove_from_freelist(next_free);
 		bp = prev_free;
 		set_freeheader(bp,size);
@@ -284,6 +290,7 @@ void remove_from_freelist(void *bp){
 		next_free->prev = prev_free;
 		((sf_free_header*)bp)->next = NULL;
 	}
+
 }
 
 void set_freeheader(void *location, size_t block_size){
@@ -365,6 +372,8 @@ void sf_free(void* ptr) {
 	void *footer_location = (char*)ptr+free_size-8;
 	set_freefooter(footer_location,free_size);
 	insert_in_freelist(ptr);
+	// printf("%s\n", "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	// sf_snapshot(true);
 	coalesce(ptr);
 
 
