@@ -512,7 +512,6 @@ void *sf_realloc(void *ptr, size_t size) {
 	return NULL;
 }
 
-
 int sf_info(info* ptr) {
 	ptr->allocatedBlocks = allocatedBlocks;
 	ptr->splinterBlocks = splinterBlocks;
