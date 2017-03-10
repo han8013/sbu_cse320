@@ -6,6 +6,9 @@
 #include "sfmm.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+
 
 size_t get_alignsize(size_t size);
 size_t get_padding_size(size_t size);
@@ -298,6 +301,7 @@ void set_freeheader(void *location, size_t block_size){
 	new_header->header.alloc = 0;
 	new_header->header.splinter = 0;
 	new_header->header.block_size = block_size>>4;
+	new_header->header.requested_size = 0;
 	new_header->header.padding_size = 0;
 	new_header->header.splinter_size = 0;
 
@@ -357,16 +361,13 @@ size_t get_padding_size(size_t size){
 		return (16-size%16);
 }
 
-void *sf_realloc(void *ptr, size_t size) {
-	return NULL;
-}
-
 void sf_free(void* ptr) {
 	/* chcek if is null*/
-	ptr = (char*)ptr-8;
 	if (ptr == NULL){
 		return;
 	}
+	ptr = (char*)ptr-8;
+
 	size_t free_size = get_size(ptr);
 	set_freeheader(ptr,free_size);
 	void *footer_location = (char*)ptr+free_size-8;
@@ -378,6 +379,108 @@ void sf_free(void* ptr) {
 
 
 }
+
+void *sf_realloc(void *ptr, size_t size) {
+	size_t old_size = get_size((char*)ptr-8);
+	void* newptr;
+
+	if (size <=0 || ptr ==NULL){
+		return NULL;
+	}
+
+	size_t ajust_size = get_alignsize(size);
+	size_t padding_size = get_padding_size(size);
+	size_t new_block_size = ajust_size+16;
+
+
+	if (old_size == new_block_size){
+		return ptr;
+	}
+	if( ((ptr-8) < start) || ((ptr-8) > end)){
+		return NULL;
+	}
+
+	if(get_alloc((char*)ptr-8) == 0){
+		return NULL;
+	}
+	/* smaller request */
+	if (old_size > new_block_size)
+	{
+			/* produce spliter */
+		if (old_size-new_block_size<32){
+			/* update */
+			size_t sp = old_size-new_block_size;
+			set_header((char*)ptr-8,old_size,padding_size,sp);
+			set_footer((char*)ptr-8+old_size-8,old_size,sp);
+			return ptr;
+		}
+		/* split block */
+		else{
+			set_header((char*)ptr-8,new_block_size,padding_size,0);
+			set_footer((char*)ptr-8+new_block_size-8,new_block_size,0);
+			void* free_ptr = (char*)ptr-8+new_block_size;
+			size_t new_free = old_size-new_block_size;
+			set_freeheader(free_ptr,new_free);
+			set_freefooter((char*)free_ptr+new_free-8,new_free);
+			insert_in_freelist(free_ptr);
+			coalesce(free_ptr);
+			return ptr;
+		}
+	}
+
+	sf_header* next_block = get_next(ptr-8);
+	size_t next_size = get_size(next_block);
+	size_t is_allocted = get_alloc(next_block);
+
+	if (is_allocted==1)
+	{
+		newptr = sf_malloc(size);
+		if (newptr==NULL){
+			return NULL;
+		}
+		memcpy(newptr,ptr,old_size-16);
+		sf_free(ptr);
+		return newptr;
+	}
+	else{
+		if (new_block_size>old_size+next_size){
+			newptr = sf_malloc(size);
+			if (newptr==NULL){
+				return NULL;
+			}
+			memcpy(newptr,ptr,old_size-16);
+			sf_free(ptr);
+			return newptr;
+		}
+		else{
+			if (old_size+next_size-new_block_size > 32){
+				/* split block */
+				remove_from_freelist(next_block);
+				set_header((char*)ptr-8,new_block_size,padding_size,0);
+				set_footer((char*)ptr-8+new_block_size-8,new_block_size,0);
+				void* free_ptr = (char*)ptr-8+new_block_size;
+				size_t new_free = old_size+next_size-new_block_size;
+				set_freeheader(free_ptr,new_free);
+				set_freefooter((char*)free_ptr+new_free-8,new_free);
+				insert_in_freelist(free_ptr);
+				coalesce(free_ptr);
+				return ptr;
+			}
+			else{
+				/* produce slpiter*/
+				/* update */
+				remove_from_freelist(next_block);
+				size_t  total = old_size+next_size;
+				size_t sp = total-new_block_size;
+				set_header((char*)ptr-8,total,padding_size,sp);
+				set_footer((char*)ptr-8+total-8,total,sp);
+				return ptr;
+			}
+		}
+	}
+	return NULL;
+}
+
 
 int sf_info(info* ptr) {
 	return -1;

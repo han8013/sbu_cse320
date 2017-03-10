@@ -102,6 +102,8 @@ int main(int argc, char *argv[]) {
     // Free a variable
     printf("=== Test6: Free a block and snapshot ===\n");
     info("%s\n", "Freeing value1...");
+    sf_varprint(value1);
+
     sf_free(value1);
     sf_snapshot(true);
     press_to_cont();
@@ -113,7 +115,7 @@ int main(int argc, char *argv[]) {
     sf_free(memory);
     press_to_cont();
     sf_snapshot(true);
-    sf_mem_fini();
 
+    sf_mem_fini();
     return EXIT_SUCCESS;
 }
