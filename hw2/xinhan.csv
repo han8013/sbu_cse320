@@ -6,28 +6,28 @@ Input file does not exist,1.0,1.0,RETURN VALUE: CORRECT PASSED CASE
 Check A5000 flag,2,2,RETURN VALUE: CORRECT PASSED CASE 
 Valid arg and invalid -a,1.0,1.0,RETURN VALUE: CORRECT PASSED CASE 
 Dictionary file does not exists,1.0,1.0,RETURN VALUE: CORRECT PASSED CASE 
-"dictionary1: correct words in simple1 (no new words, no symbols)",SIGABRT,3.5,RETURN VALUE: EXPECTED 0 RECEIVED -6 FAILED CASE: SIGNAL 6 
-"dictionary1: unchanged simple2 (no new words, no symbols, no words to correct)",SIGABRT,3.5,RETURN VALUE: EXPECTED 0 RECEIVED -6 FAILED CASE: SIGNAL 6 
-"dictionary1: new word in simple3 check output (no symbols, add 1 word to dictionary)",0,3.5,TIMEOUT ERROR
-"dictionary1: new word in simple3 check dictionary (no symbols, add 1 word to dictionary)",0,3.5,TIMEOUT ERROR
-simple1: output to file that exists,SIGABRT,3.5,RETURN VALUE: EXPECTED 0 RECEIVED -6 FAILED CASE: SIGNAL 6 
-simple1: output to file that does not exists,SIGABRT,3.5,RETURN VALUE: EXPECTED 0 RECEIVED -6 FAILED CASE: SIGNAL 6 
-dictionary2: correct medium1 (pre/post symbols),SIGABRT,2.5,RETURN VALUE: EXPECTED 0 RECEIVED -6 FAILED CASE: SIGNAL 6 
-dictionary2: unchanged medium2 (pre/post symbols),SIGABRT,2.5,RETURN VALUE: EXPECTED 0 RECEIVED -6 FAILED CASE: SIGNAL 6 
-"dictionary2: new word in medium3 check output (pre/post symbols, 2 new words)",0,2.5,TIMEOUT ERROR
-"dictionary2: new word in medium3 check dictionary (pre/post symbols, 2 new words)",0,2.5,TIMEOUT ERROR
-medium1: output to file that exists,SIGABRT,2.5,RETURN VALUE: EXPECTED 0 RECEIVED -6 FAILED CASE: SIGNAL 6 
-medium1: output to file that does not exists,SIGABRT,2.5,RETURN VALUE: EXPECTED 0 RECEIVED -6 FAILED CASE: SIGNAL 6 
-"dictionary3: correct hard1 (no new words, symbols in/pre/post words)",SIGSEGV,2.5,RETURN VALUE: EXPECTED 0 RECEIVED -11 FAILED CASE: SIGNAL 11 
-"dictionary3: unchanged hard2 (no corrections, symbols in/pre/post words)",SIGSEGV,2.5,RETURN VALUE: EXPECTED 0 RECEIVED -11 FAILED CASE: SIGNAL 11 
-dictionary3: 2 new words in hard3 check output,SIGSEGV,2.5,RETURN VALUE: EXPECTED 0 RECEIVED -11 FAILED CASE: SIGNAL 11 
-dictionary3: 2 new word in hard3 check dictionary,SIGSEGV,2.5,RETURN VALUE: EXPECTED 0 RECEIVED -11 FAILED CASE: SIGNAL 11 
-hard1: output to file that exists,SIGSEGV,2.5,RETURN VALUE: EXPECTED 0 RECEIVED -11 FAILED CASE: SIGNAL 11 
-hard1: output to file that does not exists,SIGSEGV,2.5,RETURN VALUE: EXPECTED 0 RECEIVED -11 FAILED CASE: SIGNAL 11 
-statistics for simple1,SIGABRT,2,RETURN VALUE: EXPECTED 0 RECEIVED -6 FAILED CASE: SIGNAL 6 
-statistics for medium1,SIGABRT,2,RETURN VALUE: EXPECTED 0 RECEIVED -6 FAILED CASE: SIGNAL 6 
-statistics for hard1,SIGSEGV,2,RETURN VALUE: EXPECTED 0 RECEIVED -11 FAILED CASE: SIGNAL 11 
+"dictionary1: correct words in simple1 (no new words, no symbols)",0.5,3.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+"dictionary1: unchanged simple2 (no new words, no symbols, no words to correct)",0.5,3.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+"dictionary1: new word in simple3 check output (no symbols, add 1 word to dictionary)",0.5,3.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+"dictionary1: new word in simple3 check dictionary (no symbols, add 1 word to dictionary)",0.5,3.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+simple1: output to file that exists,0.5,3.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+simple1: output to file that does not exists,0.5,3.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+dictionary2: correct medium1 (pre/post symbols),0.5,2.5,RETURN VALUE: CORRECT FAILED CASE: DIFF 
+dictionary2: unchanged medium2 (pre/post symbols),0.5,2.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+"dictionary2: new word in medium3 check output (pre/post symbols, 2 new words)",0.5,2.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+"dictionary2: new word in medium3 check dictionary (pre/post symbols, 2 new words)",0.5,2.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+medium1: output to file that exists,0.5,2.5,RETURN VALUE: CORRECT FAILED CASE: DIFF 
+medium1: output to file that does not exists,0.5,2.5,RETURN VALUE: CORRECT FAILED CASE: DIFF 
+"dictionary3: correct hard1 (no new words, symbols in/pre/post words)",0.5,2.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+"dictionary3: unchanged hard2 (no corrections, symbols in/pre/post words)",0.5,2.5,RETURN VALUE: CORRECT FAILED CASE: DIFF 
+dictionary3: 2 new words in hard3 check output,0.5,2.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+dictionary3: 2 new word in hard3 check dictionary,0.5,2.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+hard1: output to file that exists,0.5,2.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+hard1: output to file that does not exists,0.5,2.5,RETURN VALUE: CORRECT FAILED CASE: NON UNICODE BYTES 
+statistics for simple1,0,2,RETURN VALUE: EXPECTED 0 RECEIVED 0 FAILED CASE: NON UNICODE BYTES 
+statistics for medium1,0,2,RETURN VALUE: EXPECTED 0 RECEIVED 0 FAILED CASE: DIFF 
+statistics for hard1,0,2,RETURN VALUE: EXPECTED 0 RECEIVED 0 FAILED CASE: NON UNICODE BYTES 
 memory usage for simple1,0,3,RETURN VALUE: EXPECTED 0 RECEIVED 0 FAILED CASE: NON UNICODE BYTES 
 memory usage for medium1,0,3,RETURN VALUE: EXPECTED 0 RECEIVED 0 FAILED CASE 
 memory usage for hard1,0,3,RETURN VALUE: EXPECTED 0 RECEIVED 0 FAILED CASE 
-Total,8.0,75.0,
+Total,17.0,75.0,
