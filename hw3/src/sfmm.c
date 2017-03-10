@@ -30,6 +30,15 @@ void *get_prev(void *bp);
 size_t get_alloc(void* bp);
 size_t get_size(void* bp);
 
+static size_t allocatedBlocks;
+static size_t splinterBlocks;
+static size_t padding;
+static size_t splintering;
+static size_t coalesces;
+static size_t sum_block_size = 0;
+static size_t peakMemoryUtilization;
+
+
 
 /**
  * You should store the head of your free list in this variable.
@@ -46,9 +55,11 @@ int sbrk_time = 1;
 void *sf_malloc(size_t size) {
 	void *bp = NULL;
 	if(size <= 0){
+		errno = EINVAL;
 		return NULL;
 	}
 	if(size > ((4096*4)-16)){
+		errno = ENOMEM;
 		return NULL;
 	}
 	if (is_start == 0){
@@ -81,7 +92,7 @@ void *sf_malloc(size_t size) {
 		// 16 is size of sum of footer and header
 		size_t alignsize = get_alignsize(size);
 		size_t padding_size = get_padding_size(size);
-
+		padding = padding+padding_size;
 		// block size by adding padding,header and footer
 		size_t block_size = alignsize+16;
 
@@ -91,6 +102,7 @@ void *sf_malloc(size_t size) {
 			bp = best_fit(block_size);
 			if (bp != NULL) {
 				place(bp, block_size,padding_size);
+				allocatedBlocks += 1;
 				return ((char*)bp+8);
 			}else{
 				/* No fit found.Get more memory and place the block. */
@@ -100,6 +112,7 @@ void *sf_malloc(size_t size) {
 				end = sf_sbrk(0);
 				old_end = (char*)end-4096;
 				if (end == NULL){
+					errno = ENOMEM;
 					return NULL;
 				}
 				set_freeheader(old_end,4096); /* need add new free header to freelist*/
@@ -161,6 +174,7 @@ void coalesce(void *bp){
 		set_freeheader(bp,size);
 		set_freefooter((char*)bp+size-8,size);
 	}
+	coalesces +=1;
 	insert_in_freelist(bp);
 
 }
@@ -221,6 +235,8 @@ void place(void *bp, size_t needed_size, size_t padding_size){
 	if (total_free-needed_size>=32){
 		size_t new_free = total_free-needed_size;
 		set_header(bp,needed_size,padding_size,0);
+		/* peak */
+		sum_block_size += needed_size-16;
 		set_footer((char*)bp+needed_size-8,needed_size,0);
 		remove_from_freelist(bp);
 		bp = (char*)bp + needed_size;
@@ -231,7 +247,11 @@ void place(void *bp, size_t needed_size, size_t padding_size){
 	}
 	else if (total_free-needed_size<32){
 		size_t splinter_size = total_free-needed_size;
+		splintering += splinter_size;
+		splinterBlocks += 1;
 		set_header(bp,total_free,padding_size,splinter_size);
+		/* peak */
+		sum_block_size += total_free-16;
 		set_footer((char*)bp+total_free-8,total_free,splinter_size);
 		remove_from_freelist(bp);
 	}
@@ -364,8 +384,11 @@ size_t get_padding_size(size_t size){
 void sf_free(void* ptr) {
 	/* chcek if is null*/
 	if (ptr == NULL){
+		errno = EINVAL;
 		return;
 	}
+
+
 	ptr = (char*)ptr-8;
 
 	size_t free_size = get_size(ptr);
@@ -375,6 +398,7 @@ void sf_free(void* ptr) {
 	insert_in_freelist(ptr);
 	// printf("%s\n", "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 	// sf_snapshot(true);
+
 	coalesce(ptr);
 
 
@@ -385,6 +409,7 @@ void *sf_realloc(void *ptr, size_t size) {
 	void* newptr;
 
 	if (size <=0 || ptr ==NULL){
+		errno = EINVAL;
 		return NULL;
 	}
 
@@ -397,10 +422,12 @@ void *sf_realloc(void *ptr, size_t size) {
 		return ptr;
 	}
 	if( ((ptr-8) < start) || ((ptr-8) > end)){
+		errno = EINVAL;
 		return NULL;
 	}
 
 	if(get_alloc((char*)ptr-8) == 0){
+		errno = EINVAL;
 		return NULL;
 	}
 	/* smaller request */
@@ -436,6 +463,7 @@ void *sf_realloc(void *ptr, size_t size) {
 	{
 		newptr = sf_malloc(size);
 		if (newptr==NULL){
+			errno = EINVAL;
 			return NULL;
 		}
 		memcpy(newptr,ptr,old_size-16);
@@ -446,6 +474,7 @@ void *sf_realloc(void *ptr, size_t size) {
 		if (new_block_size>old_size+next_size){
 			newptr = sf_malloc(size);
 			if (newptr==NULL){
+				errno = EINVAL;
 				return NULL;
 			}
 			memcpy(newptr,ptr,old_size-16);
@@ -457,6 +486,7 @@ void *sf_realloc(void *ptr, size_t size) {
 				/* split block */
 				remove_from_freelist(next_block);
 				set_header((char*)ptr-8,new_block_size,padding_size,0);
+				sum_block_size += new_block_size-16;
 				set_footer((char*)ptr-8+new_block_size-8,new_block_size,0);
 				void* free_ptr = (char*)ptr-8+new_block_size;
 				size_t new_free = old_size+next_size-new_block_size;
@@ -473,6 +503,7 @@ void *sf_realloc(void *ptr, size_t size) {
 				size_t  total = old_size+next_size;
 				size_t sp = total-new_block_size;
 				set_header((char*)ptr-8,total,padding_size,sp);
+				sum_block_size += total-16;
 				set_footer((char*)ptr-8+total-8,total,sp);
 				return ptr;
 			}
@@ -483,5 +514,12 @@ void *sf_realloc(void *ptr, size_t size) {
 
 
 int sf_info(info* ptr) {
+	ptr->allocatedBlocks = allocatedBlocks;
+	ptr->splinterBlocks = splinterBlocks;
+	ptr->padding = padding;
+	ptr->splintering = splintering;
+	ptr->coalesces = coalesces;
+	peakMemoryUtilization = (sum_block_size)/(end-start);
+	ptr->peakMemoryUtilization = peakMemoryUtilization;
 	return -1;
 }

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include "sfmm.h"
 
 /**
@@ -62,7 +63,6 @@ Test(sf_memsuite, Coalesce_no_coalescing, .init = sf_mem_init, .fini = sf_mem_fi
   cr_assert(freelist_head->next != NULL);
   cr_assert(freelist_head->next->prev != NULL);
 }
-
 //#
 //STUDENT UNIT TESTS SHOULD BE WRITTEN BELOW
 //DO NOT DELETE THESE COMMENTS
