@@ -67,3 +67,28 @@ Test(sf_memsuite, Coalesce_no_coalescing, .init = sf_mem_init, .fini = sf_mem_fi
 //STUDENT UNIT TESTS SHOULD BE WRITTEN BELOW
 //DO NOT DELETE THESE COMMENTS
 //#
+Test(sf_memsuite, Check_ErroNo_for_oversize, .init = sf_mem_init, .fini = sf_mem_fini) {
+    void* x = sf_malloc(26000);
+    //memset(x,1,16);
+    cr_assert(x==NULL);
+    cr_assert(errno == ENOMEM);//Error is Set to ENOMEM
+}
+
+Test(sf_memsuite, Coalesce_Next_And_Previous, .init = sf_mem_init, .fini = sf_mem_fini) {
+    void* x = sf_malloc(16);
+    memset(x,1,16);
+    void* y = sf_malloc(16);
+    memset(y,1,16);
+    sf_free(x);
+    sf_free(y); // Coalescinf with prev and next free. Whole page is empty
+    void *z = sf_malloc(4080); //Malloc whole page
+    memset(z,1,4080);
+    cr_assert(freelist_head == NULL);//freelist head should be null
+}
+
+Test(sf_memsuite, Two_Partial_Page_Allocation, .init = sf_mem_init, .fini = sf_mem_fini) {
+    void* x = sf_malloc(4097);
+    memset(x,1,4097);
+    sf_free(x);
+    cr_assert(freelist_head->header.block_size << 4 == (4096*2));
+}
