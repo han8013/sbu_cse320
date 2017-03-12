@@ -95,6 +95,7 @@ int main(int argc, char *argv[]) {
     void *memory = sf_malloc(8192);
     sf_free(memory);
     press_to_cont();
+    sf_snapshot(true);
     sf_mem_fini();
     return EXIT_SUCCESS;
 }

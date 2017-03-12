@@ -92,11 +92,3 @@ Test(sf_memsuite, Two_Partial_Page_Allocation, .init = sf_mem_init, .fini = sf_m
     sf_free(x);
     cr_assert(freelist_head->header.block_size << 4 == (4096*2));
 }
-
-/* casessssssssssssssssssssss*/
-
-
-
-
-
-
