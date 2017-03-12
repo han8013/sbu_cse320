@@ -30,13 +30,16 @@ void *get_prev(void *bp);
 size_t get_alloc(void* bp);
 size_t get_size(void* bp);
 
-static size_t allocatedBlocks;
-static size_t splinterBlocks;
-static size_t padding;
-static size_t splintering;
-static size_t coalesces;
-static size_t sum_block_size = 0;
-static size_t peakMemoryUtilization;
+void *extend_heap();
+
+static size_t allocatedBlocks=0;
+static size_t splinterBlocks=0;
+static size_t padding=0;
+static size_t splintering=0;
+static size_t coalesces=0;
+static size_t sum_payload = 0;
+static size_t max_payload = 0;
+static double peakMemoryUtilization=0;
 
 
 
@@ -92,7 +95,6 @@ void *sf_malloc(size_t size) {
 		// 16 is size of sum of footer and header
 		size_t alignsize = get_alignsize(size);
 		size_t padding_size = get_padding_size(size);
-		padding = padding+padding_size;
 		// block size by adding padding,header and footer
 		size_t block_size = alignsize+16;
 
@@ -103,6 +105,12 @@ void *sf_malloc(size_t size) {
 			if (bp != NULL) {
 				place(bp, block_size,padding_size);
 				allocatedBlocks += 1;
+				padding = padding+padding_size;
+				/* peak */
+				sum_payload += size;
+				if (sum_payload>max_payload){
+					max_payload = sum_payload;
+				}
 				return ((char*)bp+8);
 			}else{
 				/* No fit found.Get more memory and place the block. */
@@ -124,9 +132,27 @@ void *sf_malloc(size_t size) {
 				// printf("%s\n", "after coalesce---------------------------------------------------------");
 				// sf_snapshot(true);
 				}
-
 			}
 		}
+	return NULL;
+}
+
+void *extend_heap(){
+	if (sbrk_time<4){
+		void *old_end = sf_sbrk(1);
+		end = sf_sbrk(0);
+		old_end = (char*)end-4096;
+		if (end == NULL){
+			errno = ENOMEM;
+			return NULL;
+		}
+		set_freeheader(old_end,4096); /* need add new free header to freelist*/
+		set_freefooter((char*)end-8,4096);
+		insert_in_freelist(old_end);
+		coalesce(old_end);
+		sbrk_time+=1;
+		return old_end;
+	}
 	return NULL;
 }
 
@@ -150,6 +176,7 @@ void coalesce(void *bp){
 		set_freeheader(bp,size);
 		void *footer_location = (char*)bp+size-8;
 		set_freefooter(footer_location,size);
+		coalesces +=1;
 
 	}
 	/* case 2: only prev is free block */
@@ -161,6 +188,7 @@ void coalesce(void *bp){
 		bp = prev_header;
 		set_freeheader(bp,size);
 		set_freefooter((char*)bp+size-8, size);
+		coalesces +=1;
 
 	}
 	/* case 3: both prev and next are free block */
@@ -173,8 +201,9 @@ void coalesce(void *bp){
 		bp = prev_free;
 		set_freeheader(bp,size);
 		set_freefooter((char*)bp+size-8,size);
+		coalesces +=1;
+
 	}
-	coalesces +=1;
 	insert_in_freelist(bp);
 
 }
@@ -218,7 +247,7 @@ void *best_fit(size_t block_size){
 			}
 			else if (current_size == min_size)
 			{
-				if (found_free < top_free)
+				if (found_free > top_free)
 				{
 					found_free = top_free;
 				}
@@ -235,8 +264,6 @@ void place(void *bp, size_t needed_size, size_t padding_size){
 	if (total_free-needed_size>=32){
 		size_t new_free = total_free-needed_size;
 		set_header(bp,needed_size,padding_size,0);
-		/* peak */
-		sum_block_size += needed_size-16;
 		set_footer((char*)bp+needed_size-8,needed_size,0);
 		remove_from_freelist(bp);
 		bp = (char*)bp + needed_size;
@@ -248,10 +275,10 @@ void place(void *bp, size_t needed_size, size_t padding_size){
 	else if (total_free-needed_size<32){
 		size_t splinter_size = total_free-needed_size;
 		splintering += splinter_size;
-		splinterBlocks += 1;
+		if (splinter_size>0){
+			splinterBlocks += 1;
+		}
 		set_header(bp,total_free,padding_size,splinter_size);
-		/* peak */
-		sum_block_size += total_free-16;
 		set_footer((char*)bp+total_free-8,total_free,splinter_size);
 		remove_from_freelist(bp);
 	}
@@ -387,10 +414,24 @@ void sf_free(void* ptr) {
 		errno = EINVAL;
 		return;
 	}
-
+	if (get_alloc((char*)ptr-8)==0){
+		errno = EINVAL;
+		return;
+	}
+	sf_header *sheader = (sf_header*) ((char*)ptr-8);
+	/* peak */
+	sum_payload -= sheader->requested_size;
+	if (sum_payload>max_payload){
+		max_payload = sum_payload;
+	}
+	allocatedBlocks -= 1;
+	padding -= sheader->padding_size;
+	if (sheader->splinter==1){
+		splinterBlocks -= 1;
+		splintering -= sheader->splinter_size;
+	}
 
 	ptr = (char*)ptr-8;
-
 	size_t free_size = get_size(ptr);
 	set_freeheader(ptr,free_size);
 	void *footer_location = (char*)ptr+free_size-8;
@@ -398,30 +439,13 @@ void sf_free(void* ptr) {
 	insert_in_freelist(ptr);
 	// printf("%s\n", "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 	// sf_snapshot(true);
-
 	coalesce(ptr);
-
 
 }
 
 void *sf_realloc(void *ptr, size_t size) {
-	size_t old_size = get_size((char*)ptr-8);
-	void* newptr;
 
 	if (size <=0 || ptr ==NULL){
-		errno = EINVAL;
-		return NULL;
-	}
-
-	size_t ajust_size = get_alignsize(size);
-	size_t padding_size = get_padding_size(size);
-	size_t new_block_size = ajust_size+16;
-
-
-	if (old_size == new_block_size){
-		return ptr;
-	}
-	if( ((ptr-8) < start) || ((ptr-8) > end)){
 		errno = EINVAL;
 		return NULL;
 	}
@@ -430,19 +454,108 @@ void *sf_realloc(void *ptr, size_t size) {
 		errno = EINVAL;
 		return NULL;
 	}
-	/* smaller request */
-	if (old_size > new_block_size)
+
+	if( ((ptr-8) < start) || ((ptr-8) > end)){
+		errno = EINVAL;
+		return NULL;
+	}
+
+	size_t old_size = get_size((char*)ptr-8);
+	void* newptr;
+
+	if ((old_size + size) > (4096*4-16))
 	{
-			/* produce spliter */
+		errno = ENOMEM;
+		return NULL;
+	}
+
+	size_t ajust_size = get_alignsize(size);
+	size_t padding_size = get_padding_size(size);
+	size_t new_block_size = ajust_size+16;
+
+	if (old_size == new_block_size){
+
+		/* info change */
+		sf_header *sheader = (sf_header*) ((char*)ptr-8);
+		padding -= sheader->padding_size;
+		if (sheader->splinter==1){
+			splinterBlocks -= 1;
+			splintering -= sheader->splinter_size;
+		}
+
+		/* peak */
+		sum_payload += (size-sheader->requested_size);
+		if (sum_payload>max_payload){
+			max_payload = sum_payload;
+		}
+
+		size_t sp = new_block_size-padding_size-16-size;
+		set_header((char*)ptr-8,old_size,padding_size,sp);
+		padding += padding_size;
+		splintering += sp;
+		if (sp>0){
+			splinterBlocks +=1;
+		}
+
+		set_footer((char*)ptr-8+old_size-8,old_size,sp);
+		return ptr;
+	}
+
+	sf_header* next_block = get_next((char*)ptr-8);
+	size_t next_size = get_size(next_block);
+	size_t is_allocted = get_alloc(next_block);
+
+	/* smaller request */
+	if (old_size > new_block_size){
+		/* produce spliter */
 		if (old_size-new_block_size<32){
+			/* info change */
+			sf_header *sheader = (sf_header*) ((char*)ptr-8);
+			padding -= sheader->padding_size;
+			if (sheader->splinter==1){
+				splinterBlocks -= 1;
+				splintering -= sheader->splinter_size;
+			}
 			/* update */
-			size_t sp = old_size-new_block_size;
-			set_header((char*)ptr-8,old_size,padding_size,sp);
-			set_footer((char*)ptr-8+old_size-8,old_size,sp);
+			if (is_allocted==1){
+				size_t sp = old_size-new_block_size;
+				// printf("%s\n", "splinter size");
+				// printf("%d\n",  (int)sp);
+
+				set_header((char*)ptr-8,old_size,padding_size,sp);
+				padding += padding_size;
+				splintering += sp;
+
+				if (sp>0){
+					splinterBlocks+=1;
+				}
+				set_footer((char*)ptr-8+old_size-8,old_size,sp);
+			}
+			else{
+				set_header((char*)ptr-8,new_block_size,padding_size,0);
+				padding += padding_size;
+				set_footer((char*)ptr-8+new_block_size-8,new_block_size,0);
+				size_t sp = old_size-new_block_size;
+
+				remove_from_freelist(next_block);
+				void* spliter_location = (char*)ptr-8+new_block_size;
+				set_freeheader(spliter_location,sp+next_size);
+				set_freefooter((char*)spliter_location+sp+next_size-8,sp+next_size);
+				insert_in_freelist(spliter_location);
+				coalesces +=1;
+			}
 			return ptr;
 		}
 		/* split block */
 		else{
+
+			sf_header *sheader = (sf_header*) ((char*)ptr-8);
+			padding -= sheader->padding_size;
+			if (sheader->splinter==1){
+				splinterBlocks -= 1;
+				splintering -= sheader->splinter_size;
+			}
+			padding += padding_size;
 			set_header((char*)ptr-8,new_block_size,padding_size,0);
 			set_footer((char*)ptr-8+new_block_size-8,new_block_size,0);
 			void* free_ptr = (char*)ptr-8+new_block_size;
@@ -455,38 +568,83 @@ void *sf_realloc(void *ptr, size_t size) {
 		}
 	}
 
-	sf_header* next_block = get_next(ptr-8);
-	size_t next_size = get_size(next_block);
-	size_t is_allocted = get_alloc(next_block);
 
-	if (is_allocted==1)
-	{
+	/* new > old */
+	if (is_allocted==1){
 		newptr = sf_malloc(size);
 		if (newptr==NULL){
 			errno = EINVAL;
 			return NULL;
 		}
+
+		sf_header *sheader = (sf_header*) ((char*)ptr-8);
+
+		/* payload not decrease due first malloc then free */
+		max_payload -= sheader->requested_size;
+
+		padding -= sheader->padding_size;
+		if (sheader->splinter==1){
+			splinterBlocks -= 1;
+			splintering -= sheader->splinter_size;
+		}
+
 		memcpy(newptr,ptr,old_size-16);
 		sf_free(ptr);
+
 		return newptr;
 	}
 	else{
 		if (new_block_size>old_size+next_size){
-			newptr = sf_malloc(size);
-			if (newptr==NULL){
-				errno = EINVAL;
-				return NULL;
+			if ((char*)ptr-8+old_size+next_size==end){
+				while(new_block_size>old_size+next_size){
+					void *extend_free = extend_heap();
+					if(extend_free==NULL){
+						errno = EINVAL;
+						return NULL;
+					}
+					next_size = get_size((char*)extend_free-next_size);
+				}
+				newptr = sf_realloc(ptr,size);
+				return newptr;
 			}
-			memcpy(newptr,ptr,old_size-16);
-			sf_free(ptr);
-			return newptr;
+			else{
+				newptr = sf_malloc(size);
+				if (newptr==NULL){
+					errno = EINVAL;
+					return NULL;
+				}
+				sf_header *sheader = (sf_header*) ((char*)ptr-8);
+				/* payload not decrease due first malloc then free */
+				max_payload -= sheader->requested_size;
+				padding -= sheader->padding_size;
+				if (sheader->splinter==1){
+					splinterBlocks -= 1;
+					splintering -= sheader->splinter_size;
+				}
+				memcpy(newptr,ptr,old_size-16);
+				sf_free(ptr);
+				return newptr;
+			}
 		}
 		else{
 			if (old_size+next_size-new_block_size > 32){
 				/* split block */
+
 				remove_from_freelist(next_block);
+
+				sf_header *sheader = (sf_header*) ((char*)ptr-8);
+				padding -= sheader->padding_size;
+				if (sheader->splinter==1){
+					splinterBlocks -= 1;
+					splintering -= sheader->splinter_size;
+				}
+				padding += padding_size;
+				/* peak */
+				sum_payload += (size-sheader->requested_size);
+				if (sum_payload>max_payload){
+					max_payload = sum_payload;
+				}
 				set_header((char*)ptr-8,new_block_size,padding_size,0);
-				sum_block_size += new_block_size-16;
 				set_footer((char*)ptr-8+new_block_size-8,new_block_size,0);
 				void* free_ptr = (char*)ptr-8+new_block_size;
 				size_t new_free = old_size+next_size-new_block_size;
@@ -500,10 +658,29 @@ void *sf_realloc(void *ptr, size_t size) {
 				/* produce slpiter*/
 				/* update */
 				remove_from_freelist(next_block);
+
+				sf_header *sheader = (sf_header*) ((char*)ptr-8);
+				padding -= sheader->padding_size;
+				if (sheader->splinter==1){
+					splinterBlocks -= 1;
+					splintering -= sheader->splinter_size;
+				}
+				padding += padding_size;
+
 				size_t  total = old_size+next_size;
 				size_t sp = total-new_block_size;
+
+				if (sp>0){
+					splintering += sp;
+					splinterBlocks += 1;
+				}
+
+				/* peak */
+				sum_payload += (size-sheader->requested_size);
+				if (sum_payload>max_payload){
+					max_payload = sum_payload;
+				}
 				set_header((char*)ptr-8,total,padding_size,sp);
-				sum_block_size += total-16;
 				set_footer((char*)ptr-8+total-8,total,sp);
 				return ptr;
 			}
@@ -513,12 +690,20 @@ void *sf_realloc(void *ptr, size_t size) {
 }
 
 int sf_info(info* ptr) {
-	ptr->allocatedBlocks = allocatedBlocks;
-	ptr->splinterBlocks = splinterBlocks;
-	ptr->padding = padding;
-	ptr->splintering = splintering;
-	ptr->coalesces = coalesces;
-	peakMemoryUtilization = (sum_block_size)/(end-start);
-	ptr->peakMemoryUtilization = peakMemoryUtilization;
+	if (ptr!=NULL)
+	{
+		ptr->allocatedBlocks = allocatedBlocks;
+		ptr->splinterBlocks = splinterBlocks;
+		ptr->padding = padding;
+		ptr->splintering = splintering;
+		ptr->coalesces = coalesces;
+		// printf("%s\n", "check before div");
+		// printf("%d\n", (int)(max_payload));
+		// printf("%d\n", (int)(end-start));
+		peakMemoryUtilization = (double)(max_payload)/(end-start);
+		// printf("%f\n", peakMemoryUtilization);
+		ptr->peakMemoryUtilization = peakMemoryUtilization;
+		return 0;
+	}
 	return -1;
 }
