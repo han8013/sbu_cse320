@@ -16,7 +16,6 @@ int main(int argc, char const *argv[], char* envp[]){
     changePrompt(shellPrompt);
     while((cmd = readline(shellPrompt)) != NULL) {
         if (strcmp(cmd, "exit")==0){
-            printf("%s\n", "exit");
             break;
         }
         strcpy(buffer,cmd);
@@ -27,7 +26,6 @@ int main(int argc, char const *argv[], char* envp[]){
         info("Length of command entered: %ld\n", strlen(cmd));
         /* You WILL lose points if your shell prints out garbage values. */
     }
-    printf("%s\n", "done");
     /* Don't forget to free allocated memory, and close file descriptors. */
     free(cmd);
 

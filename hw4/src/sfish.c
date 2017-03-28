@@ -10,26 +10,27 @@ char *oldCwd;
 
 void eval(char* cmd, char* shellPrompt){
 	char *tokens[MAXARGS];  /* Argument list execve() */
-	int bg = 0; 			/* Should the job run in bg or fg? */
-	pid_t pid;			    /* Process id */
+	//int bg = 0; 			/* Should the job run in bg or fg? */
+	//pid_t pid;			    /* Process id */
 	shellPrompt_1 = shellPrompt;
 
-	bg = parseLine(cmd,tokens);
-	printf("bg is %d\n", bg);
+	parseLine(cmd,tokens);
 	if (tokens[0] == NULL)
 		return; /* Ignore empty lines */
-	// printf ("tokens[%d] = %s\n", 0, tokens[0]);
-	// printf ("tokens[%d] = %s\n", 1, tokens[1]);
-	// printf ("tokens[%d] = %s\n", 2, tokens[2]);
 	if (builtin_command(tokens)==0) {
-		printf("%s\n", "not builtin");
+		executable_command(cmd,tokens);
 
-		if ((pid = fork()) == 0) { /* Child runs user job */
-			// if (execve(tokens[0], tokens, environ) < 0) {
-			// 	printf("%s: Command not found.\n", tokens[0]);
-			// 	exit(0);
-			// }
-		}
+		// int child_status;
+		// if ((pid = fork()) == 0){ // wrapper fork needed
+		// 	executable_command(cmd,tokens);
+		// 	if (execv(tokens[0], tokens) < 0) {
+		// 		printf("%s: Command not found.\n", tokens[0]);
+		// 		exit(0);
+		// 	}
+		// }
+		// else{
+	 //        wait(&child_status);
+		// }
 		/* Parent waits for foreground job to terminate */
 		// if (!bg) {
 		// 	int status;
@@ -41,13 +42,56 @@ void eval(char* cmd, char* shellPrompt){
 	}
 
 	return;
+}
+
+void executable_command(char* cmd, char** tokens){
+	/* check contain slash first*/
+	if (contains_slash(tokens[0])){
+		if (fileExists(tokens[0])==0){
+			printf("No such file or directory%s\n", tokens[0]);
+            return;
+		}
+	}
+	else{
+		char* path = getPath(tokens[0]);
+        if(path == NULL) {
+            printf("command not found: %s\n", tokens[0]);
+            return;
+        }
+	}
+	/* execute cmd */
+	/* fork first */
+}
+
+char* getPath(char* filename){
+	// char* envir_PATH = getenv("PATH");
 
 
+	return NULL;
+}
 
+int fileExists(const char* filename){
+    struct stat buffer;
+    int exist = stat(filename,&buffer);
+    if(exist == 0)
+        return 1;
+    else // -1
+        return 0;
+}
+
+bool contains_slash(char* s){
+    int len = strlen(s);
+    int i;
+    for(i = 0; i < len; ++i){
+        if(*s == '/')
+            return true;
+        s = s + 1;
+    }
+    return false;
 }
 
 int builtin_command(char **argv){
-	if (strcmp(argv[0], "help")==0) {/* Ignore singleton & */
+	if (strcmp(argv[0], "help")==0) {
 		printInfo();
 		return 1;
 	}
@@ -105,15 +149,6 @@ void builtin_cd(char* path){
 	        printf("No such file or directory\n");
 		}
 	}
-}
-
-int fileExists(const char* filename){
-    struct stat buffer;
-    int exist = stat(filename,&buffer);
-    if(exist == 0)
-        return 1;
-    else // -1
-        return 0;
 }
 
 int parseLine(char *buf, char **argv){
