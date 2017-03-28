@@ -2,11 +2,13 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 #define MAXARGS 128
 char *shellPrompt_1;
 char cwdbuf[512];
 char *oldCwd;
+char **pathList;
 
 void eval(char* cmd, char* shellPrompt){
 	char *tokens[MAXARGS];  /* Argument list execve() */
@@ -45,7 +47,11 @@ void eval(char* cmd, char* shellPrompt){
 }
 
 void executable_command(char* cmd, char** tokens){
+	// char argv=[strlen(cmd)];
+	// strcpy(argv,cmd);
+	// printf("%s\n", cmd);
 	/* check contain slash first*/
+	char *path;
 	if (contains_slash(tokens[0])){
 		if (fileExists(tokens[0])==0){
 			printf("No such file or directory%s\n", tokens[0]);
@@ -53,7 +59,8 @@ void executable_command(char* cmd, char** tokens){
 		}
 	}
 	else{
-		char* path = getPath(tokens[0]);
+		path = getPath(tokens[0]);
+		free(pathList);
         if(path == NULL) {
             printf("command not found: %s\n", tokens[0]);
             return;
@@ -61,22 +68,80 @@ void executable_command(char* cmd, char** tokens){
 	}
 	/* execute cmd */
 	/* fork first */
+	pid_t pid_execu;
+	int child_status;
+	if ((pid_execu=fork())==0){
+		execv(path,tokens);
+	}
+	else{
+        wait(&child_status);
+	}
+
 }
 
 char* getPath(char* filename){
-	// char* envir_PATH = getenv("PATH");
+	char* envir_PATH = getenv("PATH");
+	pathList = malloc((sizeof(char*)));
+	pathList = parsePathevn(envir_PATH,pathList);
+	char* tempPath = NULL;
+	int i = 0;
+	while(pathList[i]!=NULL){
+	    char* c = (char*)malloc(strlen(pathList[i]) + strlen(filename) + 2);
 
+		tempPath = concatPath(c,pathList[i],filename);
 
+		// free(c);
+		if(fileExists(tempPath)==1){
+			printf("%s\n", "found path");
+			return tempPath;
+		}
+		i++;
+
+	}
 	return NULL;
+}
+
+char* concatPath(char* c,char* path, char* filename) {
+	strcat(c,path);
+	strcat(c,"/");
+	strcat(c,filename);
+    *(c+strlen(c)) = '\0';
+    return c;
+
 }
 
 int fileExists(const char* filename){
     struct stat buffer;
     int exist = stat(filename,&buffer);
     if(exist == 0)
-        return 1;
+        return 1; //found
     else // -1
-        return 0;
+        return 0; //not found
+}
+
+char** parsePathevn(char *PATH, char** pathList){
+	char *p = strtok (PATH, ":");
+	int n_spaces = 0;
+
+	/* split string and append tokens to 'res' */
+	while (p) {
+	  pathList = realloc (pathList, sizeof (char*) * ++n_spaces);
+	  if (pathList == NULL)
+	    exit (-1); /* memory allocation failed */
+	  pathList[n_spaces-1] = p;
+	  p = strtok (NULL, ":");
+	}
+
+	/* realloc one extra element for the last NULL */
+	pathList = realloc (pathList, sizeof (char*) * (n_spaces+1));
+	pathList[n_spaces] = 0;
+
+	return pathList;
+	/* print the result */
+
+	// for (i = 0; i < (n_spaces+1); ++i)
+	//   printf ("res[%d] = %s\n", i, pathList[i]);
+
 }
 
 bool contains_slash(char* s){

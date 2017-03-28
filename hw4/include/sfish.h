@@ -15,11 +15,13 @@
 void eval (char* cmd, char* shellPrompt);
 void executable_command(char* cmd, char** tokens);
 char* getPath(char* filename);
+char* concatPath(char* c, char* path, char* filename);
 bool contains_slash(char* s);
 void builtin_cd(char* path);
 void builtin_pwd();
 int fileExists(const char* file);
 int builtin_command(char **argv);
+char** parsePathevn(char *PATH, char** pathList);
 int parseLine(char* cmd, char** argv);
 void changePrompt(char* shellPrompt);
 void printInfo();

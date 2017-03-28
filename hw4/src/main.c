@@ -20,10 +20,10 @@ int main(int argc, char const *argv[], char* envp[]){
         }
         strcpy(buffer,cmd);
         eval(cmd,shellPrompt);
-        printf("%s\n",buffer);
+        // printf("%s\n",buffer);
         /* All your debug print statements should use the macros found in debu.h */
         /* Use the `make debug` target in the makefile to run with these enabled. */
-        info("Length of command entered: %ld\n", strlen(cmd));
+        // info("Length of command entered: %ld\n", strlen(cmd));
         /* You WILL lose points if your shell prints out garbage values. */
     }
     /* Don't forget to free allocated memory, and close file descriptors. */
