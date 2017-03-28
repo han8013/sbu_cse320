@@ -21,37 +21,14 @@ void eval(char* cmd, char* shellPrompt){
 		return; /* Ignore empty lines */
 	if (builtin_command(tokens)==0) {
 		executable_command(cmd,tokens);
-
-		// int child_status;
-		// if ((pid = fork()) == 0){ // wrapper fork needed
-		// 	executable_command(cmd,tokens);
-		// 	if (execv(tokens[0], tokens) < 0) {
-		// 		printf("%s: Command not found.\n", tokens[0]);
-		// 		exit(0);
-		// 	}
-		// }
-		// else{
-	 //        wait(&child_status);
-		// }
-		/* Parent waits for foreground job to terminate */
-		// if (!bg) {
-		// 	int status;
-		// 	if (waitpid(pid, &status, 0) < 0)
-		// 		unix_error("waitfg: waitpid error");
-		// }
-		// else
-		// 	printf("%d %s", pid, cmd);
 	}
 
 	return;
 }
 
 void executable_command(char* cmd, char** tokens){
-	// char argv=[strlen(cmd)];
-	// strcpy(argv,cmd);
-	// printf("%s\n", cmd);
 	/* check contain slash first*/
-	char *path;
+	char *path = strdup(cmd);
 	if (contains_slash(tokens[0])){
 		if (fileExists(tokens[0])==0){
 			printf("No such file or directory%s\n", tokens[0]);
@@ -80,29 +57,26 @@ void executable_command(char* cmd, char** tokens){
 }
 
 char* getPath(char* filename){
-	char* envir_PATH = getenv("PATH");
-	pathList = malloc((sizeof(char*)));
+	char* envir_PATH = strdup(getenv("PATH"));
+	pathList = calloc((sizeof(char*)),sizeof(char));
+	printf("%s\n", envir_PATH);
 	pathList = parsePathevn(envir_PATH,pathList);
-	char* tempPath = NULL;
 	int i = 0;
 	while(pathList[i]!=NULL){
-	    char* c = (char*)malloc(strlen(pathList[i]) + strlen(filename) + 2);
-
-		tempPath = concatPath(c,pathList[i],filename);
-
-		// free(c);
+	    // char* c = (char*)malloc(strlen(pathList[i]) + strlen(filename) + 2);
+		char* tempPath = concatPath(pathList[i],filename);
 		if(fileExists(tempPath)==1){
 			printf("%s\n", "found path");
+			printf("%s\n", tempPath);
 			return tempPath;
 		}
 		i++;
-
 	}
 	return NULL;
 }
 
-char* concatPath(char* c,char* path, char* filename) {
-	strcat(c,path);
+char* concatPath(char* path, char* filename) {
+	char *c = strdup(path);
 	strcat(c,"/");
 	strcat(c,filename);
     *(c+strlen(c)) = '\0';
@@ -111,6 +85,7 @@ char* concatPath(char* c,char* path, char* filename) {
 }
 
 int fileExists(const char* filename){
+	printf(">>>>>>>>%s\n", filename);
     struct stat buffer;
     int exist = stat(filename,&buffer);
     if(exist == 0)
@@ -121,7 +96,7 @@ int fileExists(const char* filename){
 
 char** parsePathevn(char *PATH, char** pathList){
 	char *p = strtok (PATH, ":");
-	int n_spaces = 0;
+	int n_spaces = 0,i;
 
 	/* split string and append tokens to 'res' */
 	while (p) {
@@ -136,11 +111,13 @@ char** parsePathevn(char *PATH, char** pathList){
 	pathList = realloc (pathList, sizeof (char*) * (n_spaces+1));
 	pathList[n_spaces] = 0;
 
-	return pathList;
 	/* print the result */
 
-	// for (i = 0; i < (n_spaces+1); ++i)
-	//   printf ("res[%d] = %s\n", i, pathList[i]);
+	for (i = 0; i < (n_spaces+1); ++i)
+	  printf ("parse>[%d] = %s\n", i, pathList[i]);
+
+	return pathList;
+
 
 }
 
