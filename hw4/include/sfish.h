@@ -9,3 +9,8 @@
 #include <string.h>
 
 #endif
+
+void eval (char* cmd);
+int parseLine(char* cmd, char** argv);
+void changePrompt(char* shellPrompt);
+void printHelpInfo();

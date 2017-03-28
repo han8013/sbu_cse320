@@ -1,8 +1,8 @@
 image: gcc:5.4.0
 
 variables:
-    HWDIR: hw2
-    EXEC: spell
+    HWDIR: hw4
+    EXEC: sfish
     TESTEXEC: ${EXEC}_test
     BINDIR: ${HWDIR}/bin
     CRITERIONLINK: https://github.com/Snaipe/Criterion/releases/download/v2.3.0/criterion-v2.3.0-linux-x86_64.tar.bz2#

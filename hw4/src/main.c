@@ -10,8 +10,14 @@ int main(int argc, char const *argv[], char* envp[]){
     rl_catch_signals = 0;
     /* This is disable readline's default signal handlers, since you are going to install your own.*/
     char *cmd;
-    while((cmd = readline("sfish> ")) != NULL) {
-        if (strcmp(cmd, "exit")==0)
+    char buffer[1024];
+    char shellPrompt[1024];
+
+    changePrompt(shellPrompt);
+    while((cmd = readline(shellPrompt)) != NULL) {
+        strcpy(buffer,cmd);
+        eval(buffer);
+        if (strcmp(buffer, "exit")==0)
             break;
         printf("%s\n",cmd);
         /* All your debug print statements should use the macros found in debu.h */
