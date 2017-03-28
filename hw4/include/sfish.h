@@ -6,11 +6,17 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <string.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <stdbool.h>
 
 #endif
 
-void eval (char* cmd);
+void eval (char* cmd, char* shellPrompt);
+void builtin_cd(char* path);
+void builtin_pwd();
+int fileExists(const char* file);
+int builtin_command(char **argv);
 int parseLine(char* cmd, char** argv);
 void changePrompt(char* shellPrompt);
-void printHelpInfo();
+void printInfo();

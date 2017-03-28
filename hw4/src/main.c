@@ -15,17 +15,19 @@ int main(int argc, char const *argv[], char* envp[]){
 
     changePrompt(shellPrompt);
     while((cmd = readline(shellPrompt)) != NULL) {
-        strcpy(buffer,cmd);
-        eval(buffer);
-        if (strcmp(buffer, "exit")==0)
+        if (strcmp(cmd, "exit")==0){
+            printf("%s\n", "exit");
             break;
-        printf("%s\n",cmd);
+        }
+        strcpy(buffer,cmd);
+        eval(cmd,shellPrompt);
+        printf("%s\n",buffer);
         /* All your debug print statements should use the macros found in debu.h */
         /* Use the `make debug` target in the makefile to run with these enabled. */
         info("Length of command entered: %ld\n", strlen(cmd));
         /* You WILL lose points if your shell prints out garbage values. */
     }
-
+    printf("%s\n", "done");
     /* Don't forget to free allocated memory, and close file descriptors. */
     free(cmd);
 
