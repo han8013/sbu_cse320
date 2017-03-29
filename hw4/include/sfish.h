@@ -14,14 +14,22 @@
 
 void eval (char* cmd, char* shellPrompt);
 void executable_command(char* cmd, char** tokens);
+void execute(char* cmd, char** tokens);
+
+bool contains_redirection(char* s);
+void redirection(char* cmd, char** tokens);
+int findCharIndex(char* string, char e);
+
 char* getPath(char* filename);
 char* concatPath(char* path, char* filename);
 bool contains_slash(char* s);
+
 void builtin_cd(char* path);
 void builtin_pwd();
 int fileExists(const char* file);
 int builtin_command(char **argv);
-char** parsePathevn(char *PATH, char** pathList);
+
+char** parsePathevn(char *PATH, char** pathList, char* delim);
 int parseLine(char* cmd, char** argv);
 void changePrompt(char* shellPrompt);
 void printInfo();
