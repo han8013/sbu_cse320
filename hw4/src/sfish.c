@@ -28,14 +28,16 @@ int eval(char* cmd, char* shellPrompt){
 		return -1;
 	}
 
-	if (builtin_command(tokens)==0) {
-		if (contains_redirection(cmd)){
-			redirection(cmd,tokens);
-		}
-		else{
+	if (contains_redirection(cmd)) {
+		redirection(cmd,tokens);
+	}
+	else{
+		if (builtin_command(tokens)==0)
+		{
 			execute(cmd,tokens);
 		}
 	}
+
 	return 0;
 }
 
