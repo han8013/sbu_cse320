@@ -15,31 +15,30 @@ char **pro1List;
 char **pro2List;
 char **pro3List;
 
-void eval(char* cmd, char* shellPrompt){
+int eval(char* cmd, char* shellPrompt){
 	char *tokens[MAXARGS];  /* Argument list execve() */
 	//int bg = 0; 			/* Should the job run in bg or fg? */
 	//pid_t pid;			    /* Process id */
 	shellPrompt_1 = shellPrompt;
 	char *cmd_copy = strdup(cmd);
 	parseLine(cmd_copy,tokens);
+	if (builtin_command(tokens)==-1)
+	{
+		return -1;
+	}
 	if (tokens[0] == NULL)
-		return; /* Ignore empty lines */
+		return 0; /* Ignore empty lines */
 	if (builtin_command(tokens)==0) {
-		executable_command(cmd,tokens);
+		if (contains_redirection(cmd)){
+			redirection(cmd,tokens);
+		}
+		else{
+			execute(cmd,tokens);
+		}
 	}
-
-	return;
+	return 0;
 }
 
-void executable_command(char* cmd, char** tokens){
-
-	if (contains_redirection(cmd)){
-		redirection(cmd,tokens);
-	}
-	else{
-		execute(cmd,tokens);
-	}
-}
 
 void execute(char* cmd, char** tokens){
 	/* check contain slash first*/
@@ -71,71 +70,132 @@ void execute(char* cmd, char** tokens){
 }
 
 void redirection(char* cmd, char** tokens){
-	/* fork first */
-	pid_t pid_redire;
-	int child_status;
-	int findChar;
-	if ((pid_redire=fork())==0){
+
+		int findChar;
 		printf("%s\n", cmd);
 
 		if ((findChar = findCharIndex(cmd,'<'))!=-1)
 		{
-			printf("%s\n", "redirection input");
-
-			// Pro1 < input
-			redireList = malloc(sizeof(char*));
-			char *delim = "<";
-			redireList = parsePathevn(cmd,redireList,delim);
-			char* progArgv = redireList[0];
-			char* inputFile = redireList[1];
-			char *space = " ";
-			pro1List = malloc(sizeof(char*));
-
-			pro1List = parsePathevn(progArgv,pro1List,space);
-			printf("%s\n", inputFile);
-			inputFile = inputFile+1;
-			printf("%s\n", inputFile);
-
-			builtin_pwd();
-			char * temp_PATH = strcat(cwdbuf,"/");
-			inputFile = strcat(temp_PATH,inputFile);
-
-			printf("PATH IS %s\n", inputFile);
-    		int input_fd = open(inputFile, O_RDONLY);
-    		if (input_fd<0){
-		        // exit process on invalid file
-		        fprintf(stderr,"sfish: %s No such file or directory\n", inputFile);
-		        exit(EXIT_SUCCESS);
-            }
-    		dup2(input_fd, STDIN_FILENO);
-    		int fc;
-    		if ((fc = close(input_fd))<0)
-    		{
-		        fprintf(stderr,"sfish: %s File close error\n", inputFile);
-		        exit(EXIT_SUCCESS);
-		    }
-    		execute(progArgv,pro1List);
-    		free(redireList);
-    		free(pro1List);
 
 			if ((findChar = findCharIndex(cmd,'>'))!=-1) // Pro1 < input > output
 			{
 				/* code */
 			}
+			else{
+				printf("%s\n", "redirection input");
+
+				// Pro1 < input
+				redireList = malloc(sizeof(char*));
+				char *delim = "<";
+				redireList = parsePathevn(cmd,redireList,delim);
+				char* progArgv = redireList[0];
+				char* inputFile = redireList[1];
+				char *space = " ";
+				pro1List = malloc(sizeof(char*));
+				pro1List = parsePathevn(progArgv,pro1List,space);
+
+				inputFile = get_filePath(inputFile);
+	    		int input_fd = open(inputFile, O_RDONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	    		if (input_fd<0){
+			        // exit process on invalid file
+			        fprintf(stderr,"sfish: %s Open file error Or No such file or directory\n", inputFile);
+			        exit(EXIT_SUCCESS);
+	            }
+	    		dup2(input_fd, STDIN_FILENO);
+    			Close(input_fd,inputFile);
+				dup2(input_fd,0);
+
+	    		execute(progArgv,pro1List);
+	    		free(redireList);
+	    		free(pro1List);
+
+			}
+
+
 		}
 		else if ((findChar = findCharIndex(cmd,'>'))!=-1) // Pro1 > output
 		{
-			/* code */
+			printf("%s\n", "redirection output");
+
+			// Pro1 < input
+			redireList = malloc(sizeof(char*));
+			char *delim = ">";
+			redireList = parsePathevn(cmd,redireList,delim);
+			char* progArgv = redireList[0];
+			char* outputFile = redireList[1];
+			char *space = " ";
+			pro1List = malloc(sizeof(char*));
+			pro1List = parsePathevn(progArgv,pro1List,space);
+
+			outputFile = get_filePath(outputFile);
+    		int output_fd = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+    		if (output_fd<0){
+		        // exit process on invalid file
+		        fprintf(stderr,"sfish: %s Open file error Or No such file or directory\n", outputFile);
+		        exit(EXIT_SUCCESS);
+            }
+
+
+			pid_t pi1;
+			pi1 = fork();
+			if (pi1 == 0){
+			dup2(output_fd, STDOUT_FILENO);
+			printf("%s\n", "before close");
+			Close(output_fd,outputFile);
+			// dup2(output_fd,1);
+				char* path = getPath(pro1List[0]);
+				execv(path, pro1List);
+				//execute(progArgv,pro1List);
+				//execvp("ls",pro1List);
+				printf("%s\n", "after close");
+
+	    		free(redireList);
+	    		free(pro1List);
+    		}
+    		else{
+    			wait(NULL);
+    			return;
+    		}
 		}
 		else if ((findChar = findCharIndex(cmd,'|'))!=-1)
 		{
 			/* code */
 		}
 
+
+}
+
+void backFd(int input_fd, int output_fd){
+	if (input_fd != 0) {
+        dup2 (input_fd, 0);
+        close (input_fd);
+    }
+    if (output_fd != 1) {
+        dup2 (output_fd, 1);
+        close (output_fd);
+    }
+}
+
+void Close(int fd, char* File){
+	int fc;
+	printf("%s\n", "close");
+	if ((fc = close(fd))<0)
+	{
+	    fprintf(stderr,"sfish: %s File close error\n", File);
+	    exit(EXIT_SUCCESS);
 	}
-	else{
-        wait(&child_status);
+}
+
+char* get_filePath(char* filename){
+	filename = filename+1; // trim first space of filename
+
+	char *path = strdup(filename);
+	if (!contains_slash(path)){
+		builtin_pwd();
+		char * temp_PATH = strcat(cwdbuf,"/");
+		path = strcat(temp_PATH,path);
 	}
+	return path;
 }
 
 
@@ -201,9 +261,9 @@ int fileExists(const char* filename){
 }
 
 char** parsePathevn(char *PATH, char** pathList, char* delim){
-	printf("%s\n", delim);
+	// printf("%s\n", delim);
 	char *p = strtok (PATH, delim);
-	int n_spaces = 0,i;
+	int n_spaces = 0;
 
 	/* split string and append tokens to 'res' */
 	while (p) {
@@ -219,8 +279,9 @@ char** parsePathevn(char *PATH, char** pathList, char* delim){
 	pathList[n_spaces] = 0;
 
 	// /* print the result */
-	for (i = 0; i < (n_spaces+1); ++i)
-	  printf ("parse>[%d] = %s\n", i, pathList[i]);
+	// int i;
+	// for (i = 0; i < (n_spaces+1); ++i)
+	//   printf ("parse>[%d] = %s\n", i, pathList[i]);
 
 	return pathList;
 
@@ -238,7 +299,11 @@ bool contains_slash(char* s){
 }
 
 int builtin_command(char **argv){
-	if (strcmp(argv[0], "help")==0) {
+	if (strcmp(argv[0], "exit")==0)
+	{
+		return -1;
+	}
+	else if (strcmp(argv[0], "help")==0) {
 		printInfo();
 		return 1;
 	}

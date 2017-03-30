@@ -15,11 +15,12 @@ int main(int argc, char const *argv[], char* envp[]){
 
     changePrompt(shellPrompt);
     while((cmd = readline(shellPrompt)) != NULL) {
-        if (strcmp(cmd, "exit")==0){
+        // strcpy(buffer,cmd);
+        if (eval(cmd,shellPrompt) == -1)
+        {
             break;
         }
-        // strcpy(buffer,cmd);
-        eval(cmd,shellPrompt);
+
         // printf("%s\n",buffer);
         /* All your debug print statements should use the macros found in debu.h */
         /* Use the `make debug` target in the makefile to run with these enabled. */

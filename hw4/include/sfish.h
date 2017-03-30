@@ -12,9 +12,15 @@
 
 #endif
 
-void eval (char* cmd, char* shellPrompt);
+int eval (char* cmd, char* shellPrompt);
 void executable_command(char* cmd, char** tokens);
 void execute(char* cmd, char** tokens);
+
+char* get_filePath(char* filename);
+void Close(int fd, char* File);
+void OpenR(int fd, char* File);
+void OpenW(int fd, char* File);
+void backFd(int input_fd, int output_fd);
 
 bool contains_redirection(char* s);
 void redirection(char* cmd, char** tokens);
