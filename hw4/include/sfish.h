@@ -18,8 +18,8 @@ void executable_command(char* cmd, char** tokens);
 void execute(char* cmd, char** tokens);
 
 pid_t Fork();
-int spawn_proc (int in, int out, char** command);
-int fork_pipes (int n, char** commands[]);
+void spawn_proc (int in, int out, char** command);
+void fork_pipes (int n, char** commands[]);
 
 char* get_filePath(char* filename);
 void Close(int fd, char* File);

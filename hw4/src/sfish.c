@@ -37,7 +37,7 @@ int eval(char* cmd, char* shellPrompt){
 			execute(cmd,tokens);
 		}
 	}
-
+	printf("%s\n", "out111");
 	return 0;
 }
 
@@ -70,7 +70,6 @@ void execute(char* cmd, char** tokens){
 			fprintf(stderr, "%s\n", "command not found");
 			exit(1);
 		}
-		exit(0);
 	}
 	else{
         wait(&child_status);
@@ -146,16 +145,16 @@ void redirection(char* cmd, char** tokens){
 						fprintf(stderr, "%s\n", "command not found");
 						exit(1);
 					}
-					dup2(input_fd,0);
+					// dup2(input_fd,0);
 					//execute(progArgv,pro1List);
 					fprintf(stderr,"%s\n", "after close");
-		    		free(redireList);
-		    		free(pro1_List);
-		    		exit(0);
+
 	    		}
 	    		else{
 	    			wait(&child_status1);
 	    		}
+	    		free(redireList);
+		    	free(pro1_List);
 
 			}
 
@@ -185,13 +184,14 @@ void redirection(char* cmd, char** tokens){
 
 			pid_t pi1;
 			int child_status1;
-			pi1 =Fork();
+			pi1 = Fork();
 			if (pi1 == 0){
 				dup2(output_fd, STDOUT_FILENO);
 				Close(output_fd,outputFile);
 				// dup2(output_fd,1);
 				char* path = getPath(pro1_List[0]);
 				int execv_return = execv(path, pro1_List);
+				printf("%s\n", "after close 1");
 
 				if (execv_return<0)
 				{
@@ -199,11 +199,8 @@ void redirection(char* cmd, char** tokens){
 					exit(1);
 				}
 
-				dup2(output_fd,1);
-				printf("%s\n", "after close");
-	    		// free(redireList);
-	    		// free(pro1List);
-	    		exit(0);
+				printf("%s\n", "after close 2");
+
     		}
     		else{
     			wait(&child_status1);
@@ -216,7 +213,7 @@ void redirection(char* cmd, char** tokens){
 		}
 		else if ((findChar = findCharIndex(cmd,'|'))!=-1)
 		{
-			printf("%s\n", "pipe | | | | | | | | |");
+			printf("%s\n", "pipe");
 			redireList = malloc(sizeof(char*));
 			char *delim = "|";
 			redireList = parsePathevn(cmd,redireList,delim);
@@ -243,81 +240,62 @@ void redirection(char* cmd, char** tokens){
 
 			char** commands[] = {pro1_List,pro2_List,pro3_List};
 			fork_pipes(size,commands);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+			printf("%s\n", "out");
 		}
 
 
 }
 
-int fork_pipes (int n, char** commands[]){
+void fork_pipes (int n, char** commands[]){
   int i;
   int in, fd [2];
 
-  /* The first process should get its input from the original file descriptor 0.  */
   in = 0;
-
-  /* Note the loop bound, we spawn here all, but the last stage of the pipeline.  */
   for (i = 0; i < n - 1; ++i)
     {
       pipe (fd);
-
-      /* f [1] is the write end of the pipe, we carry `in` from the prev iteration.  */
       spawn_proc (in, fd [1], commands[i]);
-
-      /* No need for the write end of the pipe, the child will write here.  */
       close (fd [1]);
-
-      /* Keep the read end of the pipe, the next child will read from there.  */
       in = fd [0];
     }
-
-  /* Last stage of the pipeline - set stdin be the read end of the previous pipe
-     and output to the original file descriptor 1. */
   if (in != 0)
-    dup2 (in, 0);
-
-  /* Execute the last stage with the current process. */
-  return execvp (commands [i][0], commands [i]);
+	dup2 (in, 0);
+	char * path = getPath(commands [i][0]);
+	pid_t pid;
+	int child_status;
+  if ((pid = fork())==0){
+  	execv(path, commands [i]);
+  }
+  else{
+  	wait(&child_status);
+  	printf("%s\n", "parent");
+  }
 }
 
-int spawn_proc (int in, int out, char** command){
+void spawn_proc (int in, int out, char** command){
   pid_t pid;
-
-  if ((pid = fork ()) == 0)
-    {
+  int child_status;
+  if ((pid = fork ()) == 0){
       if (in != 0)
         {
           dup2 (in, 0);
           close (in);
         }
-
       if (out != 1)
         {
           dup2 (out, 1);
           close (out);
         }
-      return execvp (command[0], command);
+
+      char * path = getPath(command[0]);
+      execv(path, command);
+    }
+    else{
+  		wait(&child_status);
+  		printf("%s\n", "parent-1");
+
     }
 
-  return pid;
 }
 
 
@@ -326,7 +304,6 @@ pid_t Fork() {
     pid_t pid;
     if((pid = fork()) < 0) {
         fprintf(stderr,"Failed to create process.\n");
-        exit(EXIT_FAILURE);
     }
     return pid;
 }
@@ -348,7 +325,6 @@ void Close(int fd, char* File){
 	if ((fc = close(fd))<0)
 	{
 	    fprintf(stderr,"sfish: %s File close error\n", File);
-	    exit(EXIT_SUCCESS);
 	}
 }
 
@@ -362,6 +338,7 @@ char* get_filePath(char* filename){
 		char * temp_PATH = strcat(cwdbuf,"/");
 		path = strcat(temp_PATH,path);
 	}
+	printf("%s\n", path);
 	return path;
 }
 
@@ -490,13 +467,10 @@ void builtin_pwd(char* cwdbuf){
 	int child_status;
 	if ((pid = Fork()) == 0){
 		getcwd(cwdbuf,1024);
-
-		// printf("int builtin_pwd %s\n", cwdbuf);
 	}
 	else{
         wait(&child_status);
-        		        exit(0);
-
+        exit(0);
 	}
 }
 
