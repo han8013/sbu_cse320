@@ -7,7 +7,7 @@
 
 #define MAXARGS 128
 char *shellPrompt_1;
-char cwdbuf[512];
+char cwdbuf[1024];
 char *oldCwd;
 char **pathList;
 char **redireList;
@@ -137,17 +137,6 @@ void redirection(char* cmd, char** tokens){
     			wait(&child_status1);
     		}
 
-
-
-
-	   //  		dup2(input_fd, STDIN_FILENO);
-    // 			Close(input_fd,inputFile);
-				// dup2(input_fd,0);
-
-	   //  		execute(progArgv,pro1List);
-	   //  		free(redireList);
-	   //  		free(pro1List);
-
 			}
 
 
@@ -256,7 +245,7 @@ char* get_filePath(char* filename){
 
 	char *path = strdup(filename);
 	if (!contains_slash(path)){
-		builtin_pwd();
+		builtin_pwd(cwdbuf);
 		printf("in the get_filePath: %s\n", cwdbuf);
 		char * temp_PATH = strcat(cwdbuf,"/");
 		path = strcat(temp_PATH,path);
@@ -376,30 +365,31 @@ int builtin_command(char **argv){
 		return 1;
 	}
 	else if (strcmp(argv[0], "pwd")==0){
-		builtin_pwd();
+		builtin_pwd(cwdbuf);
+		// getcwd(cwdbuf,1024);
 		printf("%s\n", cwdbuf);
 		return 1;
 	}
 	return 0; /* Not a builtin command */
 }
 
-void builtin_pwd(){
+void builtin_pwd(char* cwdbuf){
 	pid_t pid;
 	int child_status;
 	if ((pid = Fork()) == 0){
-		getcwd(cwdbuf,512);
+		getcwd(cwdbuf,1024);
 		printf("int builtin_pwd %s\n", cwdbuf);
-		exit(0);
 	}
 	else{
         wait(&child_status);
+        exit(0);
 	}
 }
 
 void builtin_cd(char* path){
 	/* change to home path*/
     if(path == NULL || strcmp(path, "")==0) {
-		getcwd(cwdbuf,512);
+		builtin_pwd(cwdbuf);
         oldCwd = realloc(oldCwd, sizeof(cwdbuf) + 1);
         strcpy(oldCwd, cwdbuf);
         chdir(getenv("HOME"));
@@ -410,7 +400,7 @@ void builtin_cd(char* path){
             printf("Previous working directory not set.\n");
         }
         else {
-			getcwd(cwdbuf,512);
+		builtin_pwd(cwdbuf);
             chdir(oldCwd);
             oldCwd = realloc(oldCwd, sizeof(cwdbuf) + 1);
             strcpy(oldCwd, cwdbuf);
@@ -418,7 +408,7 @@ void builtin_cd(char* path){
     }
     /* change to exists path*/
 	else{
-		getcwd(cwdbuf,512);
+		builtin_pwd(cwdbuf);
         oldCwd = realloc(oldCwd, sizeof(cwdbuf) + 1);
         strcpy(oldCwd, cwdbuf);
 		if ((chdir(path)) == -1){
@@ -460,7 +450,7 @@ int parseLine(char *buf, char **argv){
 void changePrompt(char* shellPrompt){
 	char symbol[10];
 	strcpy(shellPrompt,"<xinhan> : ");
-	getcwd(cwdbuf,512);
+		builtin_pwd(cwdbuf);
 	strcpy(symbol,"<");
 	strcat(shellPrompt,symbol);
 	strcat(shellPrompt,cwdbuf);

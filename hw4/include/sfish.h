@@ -35,7 +35,7 @@ char* concatPath(char* path, char* filename);
 bool contains_slash(char* s);
 
 void builtin_cd(char* path);
-void builtin_pwd();
+void builtin_pwd(char* cwdbuf);
 int fileExists(const char* file);
 int builtin_command(char **argv);
 
