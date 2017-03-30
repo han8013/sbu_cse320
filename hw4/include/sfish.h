@@ -16,6 +16,10 @@ int eval (char* cmd, char* shellPrompt);
 void executable_command(char* cmd, char** tokens);
 void execute(char* cmd, char** tokens);
 
+pid_t Fork();
+
+
+
 char* get_filePath(char* filename);
 void Close(int fd, char* File);
 void OpenR(int fd, char* File);

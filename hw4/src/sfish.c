@@ -17,17 +17,17 @@ char **pro3List;
 
 int eval(char* cmd, char* shellPrompt){
 	char *tokens[MAXARGS];  /* Argument list execve() */
-	//int bg = 0; 			/* Should the job run in bg or fg? */
 	//pid_t pid;			    /* Process id */
 	shellPrompt_1 = shellPrompt;
 	char *cmd_copy = strdup(cmd);
 	parseLine(cmd_copy,tokens);
-	if (builtin_command(tokens)==-1)
-	{
-		return -1;
-	}
 	if (tokens[0] == NULL)
 		return 0; /* Ignore empty lines */
+
+	if (strcmp(tokens[0],"exit")==0){
+		return -1;
+	}
+
 	if (builtin_command(tokens)==0) {
 		if (contains_redirection(cmd)){
 			redirection(cmd,tokens);
@@ -38,7 +38,6 @@ int eval(char* cmd, char* shellPrompt){
 	}
 	return 0;
 }
-
 
 void execute(char* cmd, char** tokens){
 	/* check contain slash first*/
@@ -61,8 +60,15 @@ void execute(char* cmd, char** tokens){
 	/* fork first */
 	pid_t pid_execu;
 	int child_status;
-	if ((pid_execu=fork())==0){
-		execv(path,tokens);
+	pid_execu=Fork();
+	if ((pid_execu)==0){
+		int execv_return = execv(path,tokens);
+		if (execv_return < 0)
+		{
+			fprintf(stderr, "%s\n", "command not found");
+			exit(1);
+		}
+		exit(0);
 	}
 	else{
         wait(&child_status);
@@ -81,7 +87,8 @@ void redirection(char* cmd, char** tokens){
 			{
 				/* code */
 			}
-			else{
+			else
+			{
 				printf("%s\n", "redirection input");
 
 				// Pro1 < input
@@ -99,15 +106,47 @@ void redirection(char* cmd, char** tokens){
 	    		if (input_fd<0){
 			        // exit process on invalid file
 			        fprintf(stderr,"sfish: %s Open file error Or No such file or directory\n", inputFile);
-			        exit(EXIT_SUCCESS);
+			        exit(1);
 	            }
-	    		dup2(input_fd, STDIN_FILENO);
-    			Close(input_fd,inputFile);
-				dup2(input_fd,0);
 
-	    		execute(progArgv,pro1List);
+			pid_t pi1;
+			int child_status1;
+			pi1 = Fork();
+			if (pi1 == 0){
+				dup2(input_fd, STDIN_FILENO);
+				Close(input_fd,inputFile);
+				// dup2(output_fd,1);
+				printf("redirection program path:%s\n", pro1List[0]);
+
+				char* path = getPath(pro1List[0]);
+				printf("redirection program path:%s\n", path);
+				int execv_return = execv(path, pro1List);
+				if (execv_return<0)
+				{
+					fprintf(stderr, "%s\n", "command not found");
+					exit(1);
+				}
+				dup2(input_fd,0);
+				//execute(progArgv,pro1List);
+				printf("%s\n", "after close");
 	    		free(redireList);
 	    		free(pro1List);
+	    		exit(0);
+    		}
+    		else{
+    			wait(&child_status1);
+    		}
+
+
+
+
+	   //  		dup2(input_fd, STDIN_FILENO);
+    // 			Close(input_fd,inputFile);
+				// dup2(input_fd,0);
+
+	   //  		execute(progArgv,pro1List);
+	   //  		free(redireList);
+	   //  		free(pro1List);
 
 			}
 
@@ -126,36 +165,53 @@ void redirection(char* cmd, char** tokens){
 			char *space = " ";
 			pro1List = malloc(sizeof(char*));
 			pro1List = parsePathevn(progArgv,pro1List,space);
-
+			printf("before get_filePath%s\n", outputFile);
 			outputFile = get_filePath(outputFile);
+			printf("after get_filePath%s\n", outputFile);
+
     		int output_fd = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
     		if (output_fd<0){
 		        // exit process on invalid file
 		        fprintf(stderr,"sfish: %s Open file error Or No such file or directory\n", outputFile);
-		        exit(EXIT_SUCCESS);
+		        // exit(1);
             }
 
-
 			pid_t pi1;
-			pi1 = fork();
+			int child_status1;
+			pi1 =Fork();
 			if (pi1 == 0){
-			dup2(output_fd, STDOUT_FILENO);
-			printf("%s\n", "before close");
-			Close(output_fd,outputFile);
-			// dup2(output_fd,1);
-				char* path = getPath(pro1List[0]);
-				execv(path, pro1List);
-				//execute(progArgv,pro1List);
-				//execvp("ls",pro1List);
-				printf("%s\n", "after close");
+				dup2(output_fd, STDOUT_FILENO);
+				Close(output_fd,outputFile);
+				// dup2(output_fd,1);
 
-	    		free(redireList);
-	    		free(pro1List);
+				printf("redirection program path:%s\n", pro1List[0]);
+
+				char* path = getPath(pro1List[0]);
+				printf("redirection program path:%s\n", path);
+
+				int execv_return = execv(path, pro1List);
+
+				if (execv_return<0)
+				{
+					fprintf(stderr, "%s\n", "command not found");
+					exit(1);
+				}
+
+				dup2(output_fd,1);
+				//execute(progArgv,pro1List);
+				printf("%s\n", "after close");
+	    		// free(redireList);
+	    		// free(pro1List);
+	    		exit(0);
     		}
     		else{
-    			wait(NULL);
-    			return;
+    			wait(&child_status1);
     		}
+
+			printf("%s\n", "free");
+
+			free(redireList);
+    		free(pro1List);
 		}
 		else if ((findChar = findCharIndex(cmd,'|'))!=-1)
 		{
@@ -163,6 +219,15 @@ void redirection(char* cmd, char** tokens){
 		}
 
 
+}
+
+pid_t Fork() {
+    pid_t pid;
+    if((pid = fork()) < 0) {
+        printf("Failed to create process.\n");
+        exit(EXIT_FAILURE);
+    }
+    return pid;
 }
 
 void backFd(int input_fd, int output_fd){
@@ -192,6 +257,7 @@ char* get_filePath(char* filename){
 	char *path = strdup(filename);
 	if (!contains_slash(path)){
 		builtin_pwd();
+		printf("in the get_filePath: %s\n", cwdbuf);
 		char * temp_PATH = strcat(cwdbuf,"/");
 		path = strcat(temp_PATH,path);
 	}
@@ -299,11 +365,7 @@ bool contains_slash(char* s){
 }
 
 int builtin_command(char **argv){
-	if (strcmp(argv[0], "exit")==0)
-	{
-		return -1;
-	}
-	else if (strcmp(argv[0], "help")==0) {
+	if (strcmp(argv[0], "help")==0) {
 		printInfo();
 		return 1;
 	}
@@ -324,8 +386,10 @@ int builtin_command(char **argv){
 void builtin_pwd(){
 	pid_t pid;
 	int child_status;
-	if ((pid = fork()) == 0){
+	if ((pid = Fork()) == 0){
 		getcwd(cwdbuf,512);
+		printf("int builtin_pwd %s\n", cwdbuf);
+		exit(0);
 	}
 	else{
         wait(&child_status);
