@@ -46,7 +46,7 @@ void execute(char* cmd, char** tokens){
 	char *path = strdup(cmd);
 	if (contains_slash(tokens[0])){
 		if (fileExists(tokens[0])==0){
-			printf("No such file or directory%s\n", tokens[0]);
+			fprintf(stderr,"No such file or directory%s\n", tokens[0]);
             return;
 		}
 	}
@@ -54,7 +54,7 @@ void execute(char* cmd, char** tokens){
 		path = getPath(tokens[0]);
 		free(pathList);
         if(path == NULL) {
-            printf("command not found: %s\n", tokens[0]);
+            fprintf(stderr,"command not found: %s\n", tokens[0]);
             return;
         }
 	}
@@ -80,18 +80,18 @@ void execute(char* cmd, char** tokens){
 void redirection(char* cmd, char** tokens){
 
 		int findChar;
-		printf("%s\n", cmd);
+		// printf("%s\n", cmd);
 
 		if ((findChar = findCharIndex(cmd,'<'))!=-1)
 		{
 
 			if ((findChar = findCharIndex(cmd,'>'))!=-1) // Pro1 < input > output
 			{
-				/* code */
+				printf("%s\n", "redirection input & output");
 			}
 			else
 			{
-				printf("%s\n", "redirection input");
+				// printf("%s\n", "redirection input");
 
 				// Pro1 < input
 				redireList = malloc(sizeof(char*));
@@ -118,10 +118,10 @@ void redirection(char* cmd, char** tokens){
 				dup2(input_fd, STDIN_FILENO);
 				Close(input_fd,inputFile);
 				// dup2(output_fd,1);
-				printf("redirection program path:%s\n", pro1List[0]);
+				// printf("redirection program path:%s\n", pro1List[0]);
 
 				char* path = getPath(pro1List[0]);
-				printf("redirection program path:%s\n", path);
+				// printf("redirection program path:%s\n", path);
 				int execv_return = execv(path, pro1List);
 				if (execv_return<0)
 				{
@@ -130,7 +130,7 @@ void redirection(char* cmd, char** tokens){
 				}
 				dup2(input_fd,0);
 				//execute(progArgv,pro1List);
-				printf("%s\n", "after close");
+				fprintf(stderr,"%s\n", "after close");
 	    		free(redireList);
 	    		free(pro1List);
 	    		exit(0);
@@ -145,7 +145,7 @@ void redirection(char* cmd, char** tokens){
 		}
 		else if ((findChar = findCharIndex(cmd,'>'))!=-1) // Pro1 > output
 		{
-			printf("%s\n", "redirection output");
+			// printf("%s\n", "redirection output");
 
 			// Pro1 < input
 			redireList = malloc(sizeof(char*));
@@ -156,9 +156,7 @@ void redirection(char* cmd, char** tokens){
 			char *space = " ";
 			pro1List = malloc(sizeof(char*));
 			pro1List = parsePathevn(progArgv,pro1List,space);
-			printf("before get_filePath%s\n", outputFile);
 			outputFile = get_filePath(outputFile);
-			printf("after get_filePath%s\n", outputFile);
 
     		int output_fd = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
     		if (output_fd<0){
@@ -174,12 +172,7 @@ void redirection(char* cmd, char** tokens){
 				dup2(output_fd, STDOUT_FILENO);
 				Close(output_fd,outputFile);
 				// dup2(output_fd,1);
-
-				printf("redirection program path:%s\n", pro1List[0]);
-
 				char* path = getPath(pro1List[0]);
-				printf("redirection program path:%s\n", path);
-
 				int execv_return = execv(path, pro1List);
 
 				if (execv_return<0)
@@ -215,7 +208,7 @@ void redirection(char* cmd, char** tokens){
 pid_t Fork() {
     pid_t pid;
     if((pid = fork()) < 0) {
-        printf("Failed to create process.\n");
+        fprintf(stderr,"Failed to create process.\n");
         exit(EXIT_FAILURE);
     }
     return pid;
@@ -248,7 +241,7 @@ char* get_filePath(char* filename){
 	char *path = strdup(filename);
 	if (!contains_slash(path)){
 		builtin_pwd(cwdbuf);
-		printf("in the get_filePath: %s\n", cwdbuf);
+		// printf("in the get_filePath: %s\n", cwdbuf);
 		char * temp_PATH = strcat(cwdbuf,"/");
 		path = strcat(temp_PATH,path);
 	}
@@ -289,8 +282,8 @@ char* getPath(char* filename){
 	while(pathList[i]!=NULL){
 		char* tempPath = concatPath(pathList[i],filename);
 		if(fileExists(tempPath)==1){
-			printf("%s\n", "found path");
-			printf("%s\n", tempPath);
+			// printf("%s\n", "found path");
+			// printf("%s\n", tempPath);
 			return tempPath;
 		}
 		i++;
@@ -380,7 +373,7 @@ void builtin_pwd(char* cwdbuf){
 	int child_status;
 	if ((pid = Fork()) == 0){
 		getcwd(cwdbuf,1024);
-		printf("int builtin_pwd %s\n", cwdbuf);
+		// printf("int builtin_pwd %s\n", cwdbuf);
 	}
 	else{
         wait(&child_status);
@@ -399,7 +392,7 @@ void builtin_cd(char* path){
     /* change to previous working path */
 	else if (strcmp(path, "-")==0){
         if(oldCwd == NULL) {
-            printf("Previous working directory not set.\n");
+            fprintf(stderr,"Previous working directory not set.\n");
         }
         else {
 		builtin_pwd(cwdbuf);
@@ -414,7 +407,7 @@ void builtin_cd(char* path){
         oldCwd = realloc(oldCwd, sizeof(cwdbuf) + 1);
         strcpy(oldCwd, cwdbuf);
 		if ((chdir(path)) == -1){
-	        printf("No such file or directory\n");
+	        fprintf(stderr,"No such file or directory\n");
 		}
 	}
 }
