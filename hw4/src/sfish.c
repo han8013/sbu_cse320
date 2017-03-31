@@ -155,7 +155,6 @@ void redirection(char* cmd, char** tokens){
 	    		}
 	    		free(redireList);
 		    	free(pro1_List);
-
 			}
 
 
@@ -210,6 +209,7 @@ void redirection(char* cmd, char** tokens){
 
 			free(redireList);
     		free(pro1_List);
+
 		}
 		else if ((findChar = findCharIndex(cmd,'|'))!=-1)
 		{
@@ -239,8 +239,15 @@ void redirection(char* cmd, char** tokens){
 
 
 			char** commands[] = {pro1_List,pro2_List,pro3_List};
-			fork_pipes(size,commands);
-			printf("%s\n", "out");
+			pid_t pid;
+			int child_status_pipe;
+			if ((pid=fork())==0){
+				fork_pipes(size,commands);
+				exit(0);
+			}
+			else{
+				wait(&child_status_pipe);
+			}
 		}
 
 
@@ -261,15 +268,17 @@ void fork_pipes (int n, char** commands[]){
   if (in != 0)
 	dup2 (in, 0);
 	char * path = getPath(commands [i][0]);
-	pid_t pid;
-	int child_status;
-  if ((pid = fork())==0){
-  	execv(path, commands [i]);
-  }
-  else{
-  	wait(&child_status);
-  	printf("%s\n", "parent");
-  }
+	execv(path, commands [i]);
+
+	// pid_t pid;
+	// int child_status;
+ //  if ((pid = fork())==0){
+ //  }
+ //  else{
+ //  	wait(&child_status);
+ //  	printf("%s\n", "parent");
+ //  }
+	// return execv(path, commands [i]);
 }
 
 void spawn_proc (int in, int out, char** command){
@@ -295,6 +304,7 @@ void spawn_proc (int in, int out, char** command){
   		printf("%s\n", "parent-1");
 
     }
+    // return 0;
 
 }
 
@@ -413,7 +423,8 @@ char** parsePathevn(char *PATH, char** pathList, char* delim){
 	while (p) {
 	  pathList = realloc (pathList, sizeof (char*) * ++n_spaces);
 	  if (pathList == NULL)
-	    exit (-1); /* memory allocation failed */
+	  	fprintf(stderr,"%s\n", "Not found file or directory");
+	    // exit (-1);  memory allocation failed
 	  pathList[n_spaces-1] = p;
 	  p = strtok (NULL, delim);
 	}
