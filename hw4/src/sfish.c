@@ -256,7 +256,6 @@ void redirection(char* cmd, char** tokens){
 void fork_pipes (int n, char** commands[]){
   int i;
   int in, fd [2];
-
   in = 0;
   for (i = 0; i < n - 1; ++i)
     {
@@ -283,7 +282,9 @@ void fork_pipes (int n, char** commands[]){
 
 void spawn_proc (int in, int out, char** command){
   pid_t pid;
-  int child_status;
+
+  printf("%s\n", "in the spawn_proc");
+
   if ((pid = fork ()) == 0){
       if (in != 0)
         {
@@ -299,12 +300,6 @@ void spawn_proc (int in, int out, char** command){
       char * path = getPath(command[0]);
       execv(path, command);
     }
-    else{
-  		wait(&child_status);
-  		printf("%s\n", "parent-1");
-
-    }
-    // return 0;
 
 }
 
