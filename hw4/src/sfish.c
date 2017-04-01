@@ -37,7 +37,6 @@ int eval(char* cmd, char* shellPrompt){
 			execute(cmd,tokens);
 		}
 	}
-	printf("%s\n", "out111");
 	return 0;
 }
 
@@ -147,7 +146,7 @@ void redirection(char* cmd, char** tokens){
 					}
 					// dup2(input_fd,0);
 					//execute(progArgv,pro1List);
-					fprintf(stderr,"%s\n", "after close");
+					// fprintf(stderr,"%s\n", "after close");
 
 	    		}
 	    		else{
@@ -190,7 +189,6 @@ void redirection(char* cmd, char** tokens){
 				// dup2(output_fd,1);
 				char* path = getPath(pro1_List[0]);
 				int execv_return = execv(path, pro1_List);
-				printf("%s\n", "after close 1");
 
 				if (execv_return<0)
 				{
@@ -198,14 +196,12 @@ void redirection(char* cmd, char** tokens){
 					exit(1);
 				}
 
-				printf("%s\n", "after close 2");
 
     		}
     		else{
     			wait(&child_status1);
     		}
 
-			printf("%s\n", "free");
 
 			free(redireList);
     		free(pro1_List);
@@ -213,7 +209,6 @@ void redirection(char* cmd, char** tokens){
 		}
 		else if ((findChar = findCharIndex(cmd,'|'))!=-1)
 		{
-			printf("%s\n", "pipe");
 			redireList = malloc(sizeof(char*));
 			char *delim = "|";
 			redireList = parsePathevn(cmd,redireList,delim);
@@ -283,7 +278,7 @@ void fork_pipes (int n, char** commands[]){
 void spawn_proc (int in, int out, char** command){
   pid_t pid;
 
-  printf("%s\n", "in the spawn_proc");
+  // printf("%s\n", "in the spawn_proc");
 
   if ((pid = fork ()) == 0){
       if (in != 0)
@@ -326,7 +321,7 @@ void backFd(int input_fd, int output_fd){
 
 void Close(int fd, char* File){
 	int fc;
-	printf("%s\n", "close");
+	// printf("%s\n", "close");
 	if ((fc = close(fd))<0)
 	{
 	    fprintf(stderr,"sfish: %s File close error\n", File);
@@ -429,9 +424,9 @@ char** parsePathevn(char *PATH, char** pathList, char* delim){
 	pathList[n_spaces] = 0;
 
 	// /* print the result */
-	int i;
-	for (i = 0; i < (n_spaces+1); ++i)
-	  printf ("parse>[%d] = %s\n", i, pathList[i]);
+	// int i;
+	// for (i = 0; i < (n_spaces+1); ++i)
+	//   printf ("parse>[%d] = %s\n", i, pathList[i]);
 
 	return pathList;
 
