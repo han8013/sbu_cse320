@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <signal.h>
 #include <stdlib.h>
 
 #define MAXARGS 128
@@ -17,6 +18,9 @@ char **pro2_List;
 char **pro3_List;
 char *signal_alarm;
 int argc;
+// static volatile int keepRunning = 1;
+
+
 
 int eval(char* cmd, char* shellPrompt){
 	char *tokens[MAXARGS];  /* Argument list execve() */
@@ -90,7 +94,7 @@ void redirection(char* cmd, char** tokens){
 
 			if ((findChar = findCharIndex(cmd,'>'))!=-1) // Pro1 < input > output
 			{
-				printf("%s\n", "redirection input & output");
+				// printf("%s\n", "redirection input & output");
 				redireList = malloc(sizeof(char*));
 				char *delim = "<";
 				redireList = parsePathevn(cmd,redireList,delim);
@@ -104,9 +108,9 @@ void redirection(char* cmd, char** tokens){
 				// char *delim_2 = ">";
 				pro2_List = malloc(sizeof(char*));
 				pro2_List = parsePathevn(redireList_copy,pro2_List,space);
-				printf("%s\n", pro2_List[0]);
-				printf("%s\n", pro2_List[1]);
-				printf("%s\n", pro2_List[2]);
+				// printf("%s\n", pro2_List[0]);
+				// printf("%s\n", pro2_List[1]);
+				// printf("%s\n", pro2_List[2]);
 
 				char* inputFile = pro2_List[0];
 				char* outputFile = pro2_List[2];
@@ -312,7 +316,6 @@ void spawn_proc (int in, int out, char** command){
 	  	char * path = getPath(command[0]);
 	  	execv(path, command);
 	}
-
 }
 
 pid_t Fork() {
@@ -478,10 +481,8 @@ void killHandler(){
 }
 
 void blockHandler(){
-	write(STDOUT_FILENO,"i don't know.",13);
+    signal(SIGTSTP, SIG_IGN);
 }
-
-
 
 void builtin_pwd(char* cwdbuf){
 	pid_t pid;
