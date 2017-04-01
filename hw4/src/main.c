@@ -1,5 +1,7 @@
 #include "sfish.h"
 #include "debug.h"
+#include <signal.h>
+
 
 /*
  * As in previous hws the main function must be in its own file!
@@ -14,7 +16,13 @@ int main(int argc, char const *argv[], char* envp[]){
     char shellPrompt[1024];
 
     changePrompt(shellPrompt);
+    signal(SIGALRM,alarmHandler);
+    signal(SIGUSR2,killHandler);
+    signal(SIGTSTP, SIG_IGN);
+
+    // signal(SIGTSTP,blockHandler);
     while((cmd = readline(shellPrompt)) != NULL) {
+
         // strcpy(buffer,cmd);
         if (eval(cmd,shellPrompt) == -1)
         {

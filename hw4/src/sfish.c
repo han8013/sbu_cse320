@@ -4,6 +4,7 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #define MAXARGS 128
 char *shellPrompt_1;
@@ -14,26 +15,33 @@ char **redireList;
 char **pro1_List;
 char **pro2_List;
 char **pro3_List;
+char *signal_alarm;
+int argc;
 
 int eval(char* cmd, char* shellPrompt){
 	char *tokens[MAXARGS];  /* Argument list execve() */
-	//pid_t pid;			    /* Process id */
 	shellPrompt_1 = shellPrompt;
 	char *cmd_copy = strdup(cmd);
-	parseLine(cmd_copy,tokens);
+	argc = parseLine(cmd_copy,tokens);
+
 	if (tokens[0] == NULL)
 		return 0; /* Ignore empty lines */
 
 	if (strcmp(tokens[0],"exit")==0){
-		return -1;
+		if (argc == 1)
+			return -1;
+		else{
+			fprintf(stderr, "%s\n", "No such file or directory");
+			return 0;
+		}
+
 	}
 
 	if (contains_redirection(cmd)) {
 		redirection(cmd,tokens);
 	}
 	else{
-		if (builtin_command(tokens)==0)
-		{
+		if (builtin_command(tokens)==0){
 			execute(cmd,tokens);
 		}
 	}
@@ -64,8 +72,7 @@ void execute(char* cmd, char** tokens){
 	pid_execu=Fork();
 	if ((pid_execu)==0){
 		int execv_return = execv(path,tokens);
-		if (execv_return < 0)
-		{
+		if (execv_return < 0){
 			fprintf(stderr, "%s\n", "command not found");
 			exit(1);
 		}
@@ -76,9 +83,7 @@ void execute(char* cmd, char** tokens){
 }
 
 void redirection(char* cmd, char** tokens){
-
 		int findChar;
-		// printf("%s\n", cmd);
 
 		if ((findChar = findCharIndex(cmd,'<'))!=-1)
 		{
@@ -86,29 +91,67 @@ void redirection(char* cmd, char** tokens){
 			if ((findChar = findCharIndex(cmd,'>'))!=-1) // Pro1 < input > output
 			{
 				printf("%s\n", "redirection input & output");
+				redireList = malloc(sizeof(char*));
+				char *delim = "<";
+				redireList = parsePathevn(cmd,redireList,delim);
 
+				char* progArgv = redireList[0];
+				char *space = " ";
+				pro1_List = malloc(sizeof(char*));
+				pro1_List = parsePathevn(progArgv,pro1_List,space);
 
+				char* redireList_copy = redireList[1];
+				// char *delim_2 = ">";
+				pro2_List = malloc(sizeof(char*));
+				pro2_List = parsePathevn(redireList_copy,pro2_List,space);
+				printf("%s\n", pro2_List[0]);
+				printf("%s\n", pro2_List[1]);
+				printf("%s\n", pro2_List[2]);
 
+				char* inputFile = pro2_List[0];
+				char* outputFile = pro2_List[2];
 
+				inputFile = get_filePath(inputFile);
+	    		int input_fd = open(inputFile, O_RDONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	    		if (input_fd<0){
+			        // exit process on invalid file
+			        fprintf(stderr,"sfish: %s Open file error Or No such file or directory\n", inputFile);
+			        // exit(1);
+	            }
+	            outputFile = get_filePath(outputFile);
+		        int output_fd = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+	    		if (output_fd<0){
+			        // exit process on invalid file
+			        fprintf(stderr,"sfish: %s Open file error Or No such file or directory\n", outputFile);
+			        // exit(1);
+	            }
+				pid_t pi1;
+				int child_status1;
+				pi1 = Fork();
+				if (pi1 == 0){
+					dup2(input_fd, STDIN_FILENO);
+					Close(input_fd,inputFile);
 
+					dup2(output_fd, STDOUT_FILENO);
+					Close(output_fd,outputFile);
 
-
-
-
-
-
-
-
-
-
-
-
+					char* path = getPath(pro1_List[0]);
+					// printf("redirection program path:%s\n", path);
+					int execv_return = execv(path, pro1_List);
+					if (execv_return<0){
+						fprintf(stderr, "%s\n", "command not found");
+						exit(1);
+					}
+	    		}
+	    		else{
+	    			wait(&child_status1);
+	    		}
+	    		free(redireList);
+		    	free(pro1_List);
+		    	free(pro2_List);
 
 			}
-			else
-			{
-				// printf("%s\n", "redirection input");
-
+			else{
 				// Pro1 < input
 				redireList = malloc(sizeof(char*));
 				char *delim = "<";
@@ -119,35 +162,27 @@ void redirection(char* cmd, char** tokens){
 				pro1_List = malloc(sizeof(char*));
 				pro1_List = parsePathevn(progArgv,pro1_List,space);
 
-				inputFile = get_filePath(inputFile);
+				inputFile = get_filePath(inputFile+1); // trim first space of filename
 	    		int input_fd = open(inputFile, O_RDONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	    		if (input_fd<0){
 			        // exit process on invalid file
 			        fprintf(stderr,"sfish: %s Open file error Or No such file or directory\n", inputFile);
-			        exit(1);
+			        // exit(1);
 	            }
-
 				pid_t pi1;
 				int child_status1;
 				pi1 = Fork();
 				if (pi1 == 0){
 					dup2(input_fd, STDIN_FILENO);
 					Close(input_fd,inputFile);
-					// dup2(output_fd,1);
-					// printf("redirection program path:%s\n", pro1List[0]);
 
 					char* path = getPath(pro1_List[0]);
-					// printf("redirection program path:%s\n", path);
 					int execv_return = execv(path, pro1_List);
 					if (execv_return<0)
 					{
 						fprintf(stderr, "%s\n", "command not found");
 						exit(1);
 					}
-					// dup2(input_fd,0);
-					//execute(progArgv,pro1List);
-					// fprintf(stderr,"%s\n", "after close");
-
 	    		}
 	    		else{
 	    			wait(&child_status1);
@@ -155,12 +190,9 @@ void redirection(char* cmd, char** tokens){
 	    		free(redireList);
 		    	free(pro1_List);
 			}
-
-
 		}
 		else if ((findChar = findCharIndex(cmd,'>'))!=-1) // Pro1 > output
 		{
-			// printf("%s\n", "redirection output");
 
 			// Pro1 < input
 			redireList = malloc(sizeof(char*));
@@ -171,7 +203,7 @@ void redirection(char* cmd, char** tokens){
 			char *space = " ";
 			pro1_List = malloc(sizeof(char*));
 			pro1_List = parsePathevn(progArgv,pro1_List,space);
-			outputFile = get_filePath(outputFile);
+			outputFile = get_filePath(outputFile+1); // trim first space of filename
 
     		int output_fd = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
     		if (output_fd<0){
@@ -179,30 +211,24 @@ void redirection(char* cmd, char** tokens){
 		        fprintf(stderr,"sfish: %s Open file error Or No such file or directory\n", outputFile);
 		        // exit(1);
             }
-
 			pid_t pi1;
 			int child_status1;
 			pi1 = Fork();
 			if (pi1 == 0){
 				dup2(output_fd, STDOUT_FILENO);
 				Close(output_fd,outputFile);
-				// dup2(output_fd,1);
+
 				char* path = getPath(pro1_List[0]);
 				int execv_return = execv(path, pro1_List);
 
-				if (execv_return<0)
-				{
+				if (execv_return<0){
 					fprintf(stderr, "%s\n", "command not found");
 					exit(1);
 				}
-
-
     		}
     		else{
     			wait(&child_status1);
     		}
-
-
 			free(redireList);
     		free(pro1_List);
 
@@ -216,21 +242,19 @@ void redirection(char* cmd, char** tokens){
 			while(redireList[size]!=NULL){
 				size ++;
 			}
-			printf("%d\n", size);
 
+			char* prog1 = redireList[0];
+			char* prog2 = redireList[1];
+			char* prog3 = redireList[2];
 
-				char* prog1 = redireList[0];
-				char* prog2 = redireList[1];
-				char* prog3 = redireList[2];
+			pro1_List = malloc(sizeof(char*));
+			pro2_List = malloc(sizeof(char*));
+			pro3_List = malloc(sizeof(char*));
 
-				pro1_List = malloc(sizeof(char*));
-				pro2_List = malloc(sizeof(char*));
-				pro3_List = malloc(sizeof(char*));
-
-				char *space = " ";
-				pro1_List = parsePathevn(prog1,pro1_List,space);
-				pro2_List = parsePathevn(prog2,pro2_List,space);
-				pro3_List = parsePathevn(prog3,pro3_List,space);
+			char *space = " ";
+			pro1_List = parsePathevn(prog1,pro1_List,space);
+			pro2_List = parsePathevn(prog2,pro2_List,space);
+			pro3_List = parsePathevn(prog3,pro3_List,space);
 
 
 			char** commands[] = {pro1_List,pro2_List,pro3_List};
@@ -244,8 +268,6 @@ void redirection(char* cmd, char** tokens){
 				wait(&child_status_pipe);
 			}
 		}
-
-
 }
 
 void fork_pipes (int n, char** commands[]){
@@ -276,29 +298,22 @@ void fork_pipes (int n, char** commands[]){
 }
 
 void spawn_proc (int in, int out, char** command){
-  pid_t pid;
+	pid_t pid;
 
-  // printf("%s\n", "in the spawn_proc");
-
-  if ((pid = fork ()) == 0){
-      if (in != 0)
-        {
-          dup2 (in, 0);
-          close (in);
-        }
-      if (out != 1)
-        {
-          dup2 (out, 1);
-          close (out);
-        }
-
-      char * path = getPath(command[0]);
-      execv(path, command);
-    }
+	if ((pid = fork ()) == 0){
+	  	if (in != 0){
+	      dup2 (in, 0);
+	      close (in);
+	    }
+	  	if (out != 1){
+	      dup2 (out, 1);
+	      close (out);
+	    }
+	  	char * path = getPath(command[0]);
+	  	execv(path, command);
+	}
 
 }
-
-
 
 pid_t Fork() {
     pid_t pid;
@@ -308,41 +323,24 @@ pid_t Fork() {
     return pid;
 }
 
-void backFd(int input_fd, int output_fd){
-	if (input_fd != 0) {
-        dup2 (input_fd, 0);
-        close (input_fd);
-    }
-    if (output_fd != 1) {
-        dup2 (output_fd, 1);
-        close (output_fd);
-    }
-}
-
 void Close(int fd, char* File){
 	int fc;
-	// printf("%s\n", "close");
-	if ((fc = close(fd))<0)
-	{
-	    fprintf(stderr,"sfish: %s File close error\n", File);
+	if ((fc = close(fd))<0){
+	    fprintf(stderr,"File close error%s\n", File);
 	}
 }
 
 char* get_filePath(char* filename){
-	filename = filename+1; // trim first space of filename
-
 	char *path = strdup(filename);
+
 	if (!contains_slash(path)){
 		builtin_pwd(cwdbuf);
-		// printf("in the get_filePath: %s\n", cwdbuf);
 		char * temp_PATH = strcat(cwdbuf,"/");
 		path = strcat(temp_PATH,path);
 	}
-	printf("%s\n", path);
+	// printf("%s\n", path);
 	return path;
 }
-
-
 
 int findCharIndex(char* s, char e){
     int len = strlen(s);
@@ -376,8 +374,6 @@ char* getPath(char* filename){
 	while(pathList[i]!=NULL){
 		char* tempPath = concatPath(pathList[i],filename);
 		if(fileExists(tempPath)==1){
-			// printf("%s\n", "found path");
-			// printf("%s\n", tempPath);
 			return tempPath;
 		}
 		i++;
@@ -391,11 +387,9 @@ char* concatPath(char* path, char* filename) {
 	strcat(c,filename);
     *(c+strlen(c)) = '\0';
     return c;
-
 }
 
 int fileExists(const char* filename){
-	// printf(">>>>>>>>%s\n", filename);
     struct stat buffer;
     int exist = stat(filename,&buffer);
     if(exist == 0)
@@ -444,7 +438,7 @@ bool contains_slash(char* s){
 }
 
 int builtin_command(char **argv){
-	if (strcmp(argv[0], "help")==0) {
+	if (strcmp(argv[0], "help")==0 && argc==1) {
 		printInfo();
 		return 1;
 	}
@@ -454,14 +448,40 @@ int builtin_command(char **argv){
 		changePrompt(shellPrompt_1);
 		return 1;
 	}
-	else if (strcmp(argv[0], "pwd")==0){
+	else if (strcmp(argv[0], "pwd")==0 && argc==1){
 		builtin_pwd(cwdbuf);
 		// getcwd(cwdbuf,1024);
 		printf("%s\n", cwdbuf);
 		return 1;
 	}
+	else if (strcmp(argv[0],"alarm")==0 && argc==2){
+		builtin_alarm(argv[1]);
+		return 1;
+	}
 	return 0; /* Not a builtin command */
 }
+
+void builtin_alarm(char* seconds){
+	int s = atoi(seconds);
+	signal_alarm = seconds;
+	alarm(s);
+}
+
+void alarmHandler(int s){
+	write(STDOUT_FILENO,"Your ",5);
+	write(STDOUT_FILENO,signal_alarm,strlen(signal_alarm));
+	write(STDOUT_FILENO," second timer has finished!",28);
+}
+
+void killHandler(){
+	write(STDOUT_FILENO,"Well that was easy.",20);
+}
+
+void blockHandler(){
+	write(STDOUT_FILENO,"i don't know.",13);
+}
+
+
 
 void builtin_pwd(char* cwdbuf){
 	pid_t pid;
@@ -484,7 +504,7 @@ void builtin_cd(char* path){
         chdir(getenv("HOME"));
     }
     /* change to previous working path */
-	else if (strcmp(path, "-")==0){
+	else if (strcmp(path, "-")==0 && argc == 2){
         if(oldCwd == NULL) {
             fprintf(stderr,"Previous working directory not set.\n");
         }
@@ -509,7 +529,6 @@ void builtin_cd(char* path){
 int parseLine(char *buf, char **argv){
 	char *delim; /* Points to first space delimiter */
 	int argc; 	 /* Number of args */
-	int bg;      /* Background job? */
 
 	buf[strlen(buf)] = ' '; /* Replace trailing ’\n’ with space */
 	while (*buf && (*buf == ' ')) /* Ignore leading spaces */
@@ -529,17 +548,13 @@ int parseLine(char *buf, char **argv){
 	 if (argc == 0) /* Ignore blank line */
 	 	return 1;
 
-	 /* Should the job run in the background? */
-	 if ((bg = (*argv[argc-1] == '&')) != 0)
-	 	argv[--argc] = NULL;
-
-	 return bg;
+	 return argc;
  }
 
 void changePrompt(char* shellPrompt){
 	char symbol[10];
 	strcpy(shellPrompt,"<xinhan> : ");
-		builtin_pwd(cwdbuf);
+	builtin_pwd(cwdbuf);
 	strcpy(symbol,"<");
 	strcat(shellPrompt,symbol);
 	strcat(shellPrompt,cwdbuf);
@@ -560,5 +575,4 @@ void printInfo(){
 	printf("%s\n", "     * cd .. should change the working directory to the parent directory in the directory hierarchy.");
 	printf("%s\n", "pwd: prints the absolute path of the current working directory.");
 	printf("%s\n","================================================================================");
-
 }
