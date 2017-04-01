@@ -18,7 +18,7 @@ int main(int argc, char const *argv[], char* envp[]){
     changePrompt(shellPrompt);
     signal(SIGALRM,alarmHandler);
     signal(SIGUSR2,killHandler);
-    signal(SIGTSTP, SIG_IGN);
+    // signal(SIGTSTP, SIG_IGN);
 
     // signal(SIGTSTP,blockHandler);
     while((cmd = readline(shellPrompt)) != NULL) {
