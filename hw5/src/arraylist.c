@@ -1,59 +1,160 @@
 #include "arraylist.h"
 #include <errno.h>
-
+#include "const.h"
+#include <stdio.h>
+#include <string.h>
 /**
  * @visibility HIDDEN FROM USER
  * @return     true on success, false on failure
  */
 static bool resize_al(arraylist_t* self){
     bool ret = false;
-
+    size_t length = self->length;
+    size_t capacity = self->capacity;
+    size_t item_size = self->item_size;
+    if (length == capacity){
+        self->capacity = 2*capacity;
+        void* next = (void*)((size_t)self->base+length*item_size);
+        next = calloc(capacity,item_size);
+        return true;
+    }
+    else if (length == (capacity/2) - 1){
+        if (capacity/2>=INIT_SZ){
+            self->capacity = capacity/2;
+        }
+        return true;
+    }
     return ret;
 }
 
 arraylist_t *new_al(size_t item_size){
     void *ret = NULL;
+    if (item_size<=0){
+        fprintf(stderr, "Value of errno: %d\n", errno);
+        return ret;
+    }
+    else{
+        arraylist_t *arraylist = malloc(sizeof(arraylist_t));
+        arraylist->capacity = INIT_SZ;
+        arraylist->length = 0;
+        arraylist->item_size = item_size;
+        void *base = calloc(INIT_SZ,item_size);
+        arraylist->base = base;
+        ret = arraylist;
+        return ret;
+    }
 
-    return ret;
 }
 
 size_t insert_al(arraylist_t *self, void* data){
     size_t ret = UINT_MAX;
-
-    resize_al(self);
-
+    if (self==NULL || data == NULL){
+        fprintf(stderr, "Value of errno: %d\n", errno);
+        return ret;
+    }
+    if (self->length == self->capacity){
+        resize_al(self);
+    }
+    void *dest = (void*)((size_t)self->base+(self->length*self->item_size));
+    memcpy(dest,data,self->item_size);
+    self->length++;
+    ret = self->length;
     return ret;
 }
 
 size_t get_data_al(arraylist_t *self, void *data){
     size_t ret = 0;
-
+    if (data==NULL){
+        return ret;
+    }
+    for (int i = 0; i < self->length; ++i){
+        void *temp = (void*)((size_t)self->base+(i*self->item_size));
+        if (memcmp(temp,data,self->item_size)==0){
+            return (size_t)i;
+        }
+    }
+    ret = UINT_MAX;
     return ret;
 }
 
 void *get_index_al(arraylist_t *self, size_t index){
     void *ret = NULL;
-
+    if (index >= self->length){
+        ret = (void*)((size_t)self->base+((self->length-1)*self->item_size));
+    }
+    else{
+        ret = (void*)((size_t)self->base+(index*self->item_size));
+    }
     return ret;
 }
 
 bool remove_data_al(arraylist_t *self, void *data){
     bool ret = false;
-
-    resize_al(self);
-
+    if (self->length ==0 ){
+        return ret;
+    }
+    else{
+        void *base = self->base;
+        size_t item_size = self->item_size;
+        if (data == NULL){
+            /* revove first one */
+            for (int i = 1; i < self->length; ++i){
+                void* dest = (void*)((size_t)base+(i-1)*item_size);
+                void* sour = (void*)((size_t)base+i*item_size);
+                memmove(dest,sour,item_size);
+            }
+        }
+        else{
+            int j;
+            for (int i = 0; i < self->length; ++i){
+                void *temp = (void*)((size_t)base+i*item_size);
+                if (memcmp(temp,data,self->item_size)==0){
+                    j = i;
+                }
+            }
+            for (j = 1; j < self->length; ++j){
+                void* dest = (void*)((size_t)base+(j-1)*item_size);
+                void* sour = (void*)((size_t)base+j*item_size);
+                memmove(dest,sour,item_size);
+            }
+        }
+        self->length--;
+        if (self->length == (self->capacity/2) - 1){
+            resize_al(self);
+        }
+        ret = true;
+        return ret;
+    }
     return ret;
 }
 
 void *remove_index_al(arraylist_t *self, size_t index){
     void *ret = 0;
-
-    resize_al(self);
+    void *base = self->base;
+    size_t item_size = self->item_size;
+    if (index >= self->length){
+        void* sour = (void*)((size_t)base+self->length*item_size);
+        ret = calloc(1,item_size);
+        memcpy(ret,sour,item_size);
+    }
+    else{
+        void *sour = (void*)((size_t)base+index*item_size);
+        ret = calloc(1,item_size);
+        memcpy(ret,sour,item_size);
+        for (int j = index+1; j < self->length; ++j){
+            void* dest = (void*)((size_t)base+(j-1)*item_size);
+            void* sour = (void*)((size_t)base+j*item_size);
+            memmove(dest,sour,item_size);
+        }
+    }
+    self->length--;
+    if (self->length == (self->capacity/2) - 1){
+        resize_al(self);
+    }
 
     return ret;
 }
 
 void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
-
     return;
 }

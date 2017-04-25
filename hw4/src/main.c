@@ -12,15 +12,21 @@ int main(int argc, char const *argv[], char* envp[]){
     rl_catch_signals = 0;
     /* This is disable readline's default signal handlers, since you are going to install your own.*/
     char *cmd;
-    // char buffer[1024];
     char shellPrompt[1024];
 
     changePrompt(shellPrompt);
     signal(SIGALRM,alarmHandler);
     signal(SIGUSR2,killHandler);
     // signal(SIGTSTP, SIG_IGN);
+    signal(SIGTSTP,blockHandler);
 
-    // signal(SIGTSTP,blockHandler);
+
+    struct sigaction sa;
+    sa.sa_handler = sig_child;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_SIGINFO;
+    sigaction(SIGCHLD, &sa, NULL);
+
     while((cmd = readline(shellPrompt)) != NULL) {
 
         // strcpy(buffer,cmd);
