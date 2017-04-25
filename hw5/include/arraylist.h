@@ -24,6 +24,16 @@ typedef struct{
 
 }arraylist_t;
 
+typedef struct{
+    int i;
+    float f;
+    long double ld;
+    char c1:4;
+    char c2:4;
+    short s;
+    void *some_data;
+}test_item_t;
+
 arraylist_t *new_al(size_t item_size);
 
 size_t insert_al(arraylist_t *self, void* data);
