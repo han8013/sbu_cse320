@@ -48,7 +48,7 @@ static bool resize_al(arraylist_t* self){
     size_t item_size = self->item_size;
     if (length == capacity){
         self->capacity = 2*capacity;
-        void *temp = calloc(self->capacity,item_size);
+        void *temp = calloc(self->capacity, item_size);
         memmove(temp,self->base,item_size*length);
         free(self->base);
         self->base = temp;
@@ -57,10 +57,6 @@ static bool resize_al(arraylist_t* self){
     else if (length == (capacity/2) - 1){
         if (capacity/2>=INIT_SZ){
             self->capacity = capacity/2;
-            // void *temp = calloc(self->capacity,item_size);
-            // memmove(temp,self->base,item_size*self->capacity);
-            // free(self->base);
-            // self->base = temp;
         }
 
         ret = true;
