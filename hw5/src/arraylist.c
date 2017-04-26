@@ -49,16 +49,18 @@ static bool resize_al(arraylist_t* self){
     if (length == capacity){
         self->capacity = 2*capacity;
         void *temp = calloc(self->capacity,item_size);
-        memmove(temp,self->base,item_size*self->capacity);
+        memmove(temp,self->base,item_size*length);
+        free(self->base);
         self->base = temp;
         ret = true;
     }
     else if (length == (capacity/2) - 1){
         if (capacity/2>=INIT_SZ){
             self->capacity = capacity/2;
-            void *temp = calloc(self->capacity,item_size);
-            memmove(temp,self->base,item_size*self->capacity);
-            self->base = temp;
+            // void *temp = calloc(self->capacity,item_size);
+            // memmove(temp,self->base,item_size*self->capacity);
+            // free(self->base);
+            // self->base = temp;
         }
 
         ret = true;
@@ -95,7 +97,7 @@ size_t insert_al(arraylist_t *self, void* data){
         resize_al(self);
     }
     void *dest = (void*)(self->base+((self->length)*(self->item_size)));
-    memcpy(dest,data,self->item_size);
+    memmove(dest,data,self->item_size);
     ret = self->length;
     self->length++;
     V(&mutex);
@@ -187,9 +189,9 @@ void *remove_index_al(arraylist_t *self, size_t index){
         void *sour = (void*)(base+index*item_size);
         ret = calloc(1,item_size);
         memmove(ret,sour,item_size);
-        for (int j = index+1; j < self->length; ++j){
-            void* dest = (void*)(base+(j-1)*item_size);
-            void* sour = (void*)(base+j*item_size);
+        for (int j = index; j < self->length-1; ++j){
+            void* dest = (void*)(base+j*item_size);
+            void* sour = (void*)(base+(j+1)*item_size);
             memcpy(dest,sour,item_size);
         }
     }
