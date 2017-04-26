@@ -15,15 +15,15 @@ typedef struct {
     double gpa;
 }student_t;
 
-// typedef struct{
-//     int i;
-//     float f;
-//     long double ld;
-//     char c1:4;
-//     char c2:4;
-//     short s;
-//     void *some_data;
-// }test_item_t;
+typedef struct{
+    int i;
+    float f;
+    long double ld;
+    char c1:4;
+    char c2:4;
+    short s;
+    void *some_data;
+}test_item_t;
 
 /******************************************
  *              HELPER FUNCS              *

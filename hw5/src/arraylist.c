@@ -4,10 +4,43 @@
 #include <stdio.h>
 #include <string.h>
 #include <semaphore.h>
+#include "csapp.h"
 /**
  * @visibility HIDDEN FROM USER
  * @return     true on success, false on failure
  */
+// void unix_error(char *msg);
+// /* POSIX semaphore wrappers */
+// void Sem_init(sem_t *sem, int pshared, unsigned int value);
+// void P(sem_t *sem);
+// void V(sem_t *sem);
+
+// void unix_error(char *msg) /* Unix-style error */
+// {
+//     fprintf(stderr, "%s: %s\n", msg, strerror(errno));
+//     exit(0);
+// }
+
+// void Sem_init(sem_t *sem, int pshared, unsigned int value)
+// {
+//     if (sem_init(sem, pshared, value) < 0)
+//     unix_error("Sem_init error");
+// }
+
+// void P(sem_t *sem)
+// {
+//     if (sem_wait(sem) < 0)
+//     unix_error("P error");
+// }
+
+// void V(sem_t *sem)
+// {
+//     if (sem_post(sem) < 0)
+//     unix_error("V error");
+// }
+
+sem_t mutex;
+
 static bool resize_al(arraylist_t* self){
     bool ret = false;
     size_t length = self->length;
@@ -15,15 +48,20 @@ static bool resize_al(arraylist_t* self){
     size_t item_size = self->item_size;
     if (length == capacity){
         self->capacity = 2*capacity;
-        self->base = realloc(self->base,item_size*self->capacity);
-        memset(self->base+item_size*(self->capacity/2),'0',item_size*(self->capacity/2));
-        return true;
+        void *temp = calloc(self->capacity,item_size);
+        memmove(temp,self->base,item_size*self->capacity);
+        self->base = temp;
+        ret = true;
     }
     else if (length == (capacity/2) - 1){
         if (capacity/2>=INIT_SZ){
             self->capacity = capacity/2;
+            void *temp = calloc(self->capacity,item_size);
+            memmove(temp,self->base,item_size*self->capacity);
+            self->base = temp;
         }
-        return true;
+
+        ret = true;
     }
     return ret;
 }
@@ -41,6 +79,7 @@ arraylist_t *new_al(size_t item_size){
         arraylist->item_size = item_size;
         arraylist->base = calloc(INIT_SZ,item_size);
         ret = arraylist;
+        Sem_init(&mutex,0,1);
         return ret;
     }
 }
@@ -51,6 +90,7 @@ size_t insert_al(arraylist_t *self, void* data){
         fprintf(stderr, "errno: %d\n", errno);
         return ret;
     }
+    P(&mutex);
     if (self->length == self->capacity){
         resize_al(self);
     }
@@ -58,9 +98,7 @@ size_t insert_al(arraylist_t *self, void* data){
     memcpy(dest,data,self->item_size);
     ret = self->length;
     self->length++;
-    // printf("insert return value check %d\n",(int)ret );
-    //     test_item_t *t = (test_item_t*)((size_t)self->base+(ret*self->item_size));
-    //     printf("insert first value %d\n", t->i);
+    V(&mutex);
     return ret;
 }
 
@@ -71,10 +109,7 @@ size_t get_data_al(arraylist_t *self, void *data){
     }
     for (int i = 0; i < self->length; ++i){
         void *temp = (void*)(self->base+(i*self->item_size));
-                // test_item_t *t = (test_item_t*)(self->base+(i*self->item_size));
-                // printf("insert first value %d\n", t->i);
         if (memcmp(temp,data,self->item_size)==0){
-            // printf("found \n");
             ret = i;
             return ret;
         }
@@ -92,19 +127,14 @@ void *get_index_al(arraylist_t *self, size_t index){
     }
     else{
         void* sour = (self->base+index*self->item_size);
-
         memcpy(ret,sour,self->item_size);
-        // test_item_t *t = (test_item_t*)(self->base+(index*self->item_size));
-        // printf("index %d\n", (int)index);
-        // printf("insert value test4------------------------ %d\n", t->i);
-        // test_item_t *t1 = (test_item_t*)ret;
-        // printf("insert %d\n", t1->i);
     }
     return ret;
 }
 
 bool remove_data_al(arraylist_t *self, void *data){
     bool ret = false;
+    P(&mutex);
     if (self->length ==0 ){
         return ret;
     }
@@ -138,8 +168,8 @@ bool remove_data_al(arraylist_t *self, void *data){
             resize_al(self);
         }
         ret = true;
-        return ret;
     }
+    V(&mutex);
     return ret;
 }
 
@@ -147,26 +177,27 @@ void *remove_index_al(arraylist_t *self, size_t index){
     void *ret = 0;
     void *base = self->base;
     size_t item_size = self->item_size;
+    P(&mutex);
     if (index >= self->length){
         void* sour = (void*)(base+self->length*item_size);
         ret = calloc(1,item_size);
-        memcpy(ret,sour,item_size);
+        memmove(ret,sour,item_size);
     }
     else{
         void *sour = (void*)(base+index*item_size);
         ret = calloc(1,item_size);
-        memcpy(ret,sour,item_size);
+        memmove(ret,sour,item_size);
         for (int j = index+1; j < self->length; ++j){
             void* dest = (void*)(base+(j-1)*item_size);
             void* sour = (void*)(base+j*item_size);
-            memmove(dest,sour,item_size);
+            memcpy(dest,sour,item_size);
         }
     }
     self->length--;
     if (self->length == (self->capacity/2) - 1){
         resize_al(self);
     }
-
+    V(&mutex);
     return ret;
 }
 
