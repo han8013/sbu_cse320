@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <stdbool.h>
+#include <semaphore.h>
 #include "const.h"
 
 /*
@@ -21,7 +22,9 @@ typedef struct{
     size_t item_size;
     void* base;
     /* END: .. add locks, other fields BELOW THIS COMMENT if needed .. */
-
+    int readcnt;
+    sem_t mutex;
+    sem_t w;
 }arraylist_t;
 
 arraylist_t *new_al(size_t item_size);

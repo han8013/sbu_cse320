@@ -40,6 +40,8 @@
 // }
 
 sem_t mutex;
+sem_t w;
+int readcnt;
 
 static bool resize_al(arraylist_t* self){
     bool ret = false;
@@ -79,7 +81,9 @@ arraylist_t *new_al(size_t item_size){
         arraylist->item_size = item_size;
         arraylist->base = calloc(INIT_SZ,item_size);
         ret = arraylist;
-        Sem_init(&mutex,0,1);
+        Sem_init(&(arraylist->mutex),0,1);
+        Sem_init(&(arraylist->w),0,1);
+        arraylist->readcnt = 0;
         return ret;
     }
 }
@@ -91,8 +95,7 @@ size_t insert_al(arraylist_t *self, void* data){
         fprintf(stderr, "errno: %d\n", errno);
         return ret;
     }
-    P(&mutex);
-
+    P(&(self->w));
     if (self->length == self->capacity){
         resize_al(self);
     }
@@ -100,7 +103,7 @@ size_t insert_al(arraylist_t *self, void* data){
     memcpy(dest,data,self->item_size);
     ret = self->length;
     self->length++;
-    V(&mutex);
+    V(&(self->w));
     return ret;
 }
 
@@ -109,23 +112,36 @@ size_t get_data_al(arraylist_t *self, void *data){
     if (data==NULL){
         return ret;
     }
-    P(&mutex);
+    P(&(self->mutex));
+    self->readcnt++;
+    if (self->readcnt==1){
+        P(&(self->w));
+    }
+    V(&(self->mutex));
     ret = UINT_MAX;
     for (int i = 0; i < self->length; ++i){
         void *temp = (void*)(self->base+(i*self->item_size));
         if (memcmp(temp,data,self->item_size)==0){
             ret = i;
-            // V(&mutex);
-            // return ret;
         }
     }
-    V(&mutex);
+    P(&self->mutex);
+    self->readcnt--;
+    if (self->readcnt==0){
+        V(&(self->w));
+    }
+    V(&(self->mutex));
     return ret;
 }
 
 void *get_index_al(arraylist_t *self, size_t index){
     void *ret = NULL;
-    P(&mutex);
+    P(&(self->mutex));
+    self->readcnt++;
+    if (self->readcnt==1){
+        P(&(self->w));
+    }
+    V(&(self->mutex));
     ret = calloc(1,self->item_size);
     if (index >= self->length){
         void* sour = (self->base+((self->length-1)*self->item_size));
@@ -135,7 +151,12 @@ void *get_index_al(arraylist_t *self, size_t index){
         void* sour = (self->base+index*self->item_size);
         memcpy(ret,sour,self->item_size);
     }
-    V(&mutex);
+    P(&(self->mutex));
+    self->readcnt--;
+    if (self->readcnt==0){
+        V(&(self->w));
+    }
+    V(&(self->mutex));
     return ret;
 }
 
@@ -147,7 +168,7 @@ bool remove_data_al(arraylist_t *self, void *data){
     else{
         void *base = self->base;
         size_t item_size = self->item_size;
-        P(&mutex);
+        P(&(self->w));
         if (data == NULL){
             /* revove first one */
             for (int i = 1; i < self->length; ++i){
@@ -178,7 +199,7 @@ bool remove_data_al(arraylist_t *self, void *data){
         }
         ret = true;
     }
-    V(&mutex);
+    V(&(self->w));
     return ret;
 }
 
@@ -186,7 +207,7 @@ void *remove_index_al(arraylist_t *self, size_t index){
     void *ret = 0;
     void *base = self->base;
     size_t item_size = self->item_size;
-    P(&mutex);
+    P(&(self->w));
     if (index >= self->length){
         void* sour = (void*)(base+(self->length-1)*item_size);
         ret = calloc(1,item_size);
@@ -207,7 +228,7 @@ void *remove_index_al(arraylist_t *self, size_t index){
     if (self->length == (self->capacity/2) - 1){
         resize_al(self);
     }
-    V(&mutex);
+    V(&(self->w));
     return ret;
 }
 

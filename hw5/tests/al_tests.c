@@ -362,109 +362,73 @@ Test(al_suite, test_remove_shifting_index, .timeout=30){
     cr_assert(locallist1->length == 0);
 }
 
-// Test(al_suite, threads_test_2, .timeout = 40)
-// {
-//     global_list8 = new_al(sizeof(test_item_t));
 
-//     // memset(x, 0, );
-//     // student_t *t = calloc(1,sizeof(student_t));
-//     pthread_t threads[5000];
-//     // bool test_bool[NUM_THREADS];
-//     int rc;
-//     int i;
 
-//     for(i = 0  ; i < 5000; i++)
-//     {
-//         gt2[i] = malloc(sizeof(test_item_t));
-//         int* y = malloc(sizeof(int));
-//         *y = i;
-//         rc = pthread_create(&threads[i],NULL,test_insert_get2,(void*)y);
-//         if (rc)
-//         {
-//             printf("ERROR; return code from pthread_create() is %d\n", rc);
-//             exit(-1);
-//        }
-//     }
+Test(al_suite, multithread_test_4, .timeout = 4){
+    global_list7 = new_al(sizeof(test_item_t));
+    pthread_t threads[500];
+    int rc;
+    int i;
 
-//     for(int i = 0 ; i < 5000 ; i++){
-//         pthread_join(threads[i],NULL);
-//     }
-//     // printf("%p\n", global_list8->base);
-//     for(int i = 0 ; i < 5000 ; i++){
-//         // printf("%d\n", i);
-//         //cr_assert(memcmp(gt2[i], w[i], sizeof(test_item_t)) == 0);
-//         test_item_t* p = global_list8->base;
-//         p += k[i];
-//         //cr_assert(memcmp(p, gt2[i], sizeof(test_item_t)) == 0, "i is %d, p->i is %d, and gt2[i]->i is %d\n", i, p->i, gt2[i]->i);
-//         //cr_assert(memcmp(p, w[i], sizeof(test_item_t)) == 0);
+    for(i = 0  ; i < 500; i++){
+        gt[i] = malloc(sizeof(test_item_t));
+        int* y = malloc(sizeof(int));
+        *y = i;
+        rc = pthread_create(&threads[i],NULL,test_insert_get,(void*)y);
+        if (rc){
+            printf("ERROR; return code from pthread_create() is %d\n", rc);
+            exit(-1);
+        }
+    }
+    for(int i = 0 ; i < 500 ; i++){
+        pthread_join(threads[i],NULL);
+    }
+    bool test_bool[500] = {0};
+    for(int i = 0 ; i < 500 ; i++){
+        //printf("%d\n", x[i]);
+        cr_assert(!test_bool[x[i]], "i = %d, x[i] = %d", i, x[i]);
+        test_bool[x[i]] = true;
+    }
+    for(int i = 0 ; i < 500 ; i++){
+        cr_assert(test_bool[gt[i]->i], "i = %d, gt[i]->i = %d", i, gt[i]->i);
+        test_bool[gt[i]->i] = false;
+    }
+}
 
-//         cr_assert(memcmp(gt2[i], w[i], sizeof(test_item_t))==0);
-//     }
-// }
+Test(al_suite, multithread_test_4444, .timeout=10){
+    list1 = new_al(sizeof(test_item_t));
+    pthread_t threads[NUM_THREADS];
+    bool test_bool[NUM_THREADS];
+    int i;
+    int ret_pthread_create;
+    int* y;
 
-// Test(al_suite, multithread_test_4, .timeout = 4){
-//     global_list7 = new_al(sizeof(test_item_t));
-//     pthread_t threads[500];
-//     int rc;
-//     int i;
+    for(i = 0; i < NUM_THREADS; i++){
+        test_item_list[i] = malloc(sizeof(test_item_t));
+        y = malloc(sizeof(int));
+        *y = i;
+        ret_pthread_create = pthread_create(&threads[i], NULL, test_insert_get_lll, (void*)y);
 
-//     for(i = 0  ; i < 500; i++){
-//         gt[i] = malloc(sizeof(test_item_t));
-//         int* y = malloc(sizeof(int));
-//         *y = i;
-//         rc = pthread_create(&threads[i],NULL,test_insert_get,(void*)y);
-//         if (rc){
-//             printf("ERROR; return code from pthread_create() is %d\n", rc);
-//             exit(-1);
-//         }
-//     }
-//     for(int i = 0 ; i < 500 ; i++){
-//         pthread_join(threads[i],NULL);
-//     }
-//     bool test_bool[500] = {0};
-//     for(int i = 0 ; i < 500 ; i++){
-//         //printf("%d\n", x[i]);
-//         cr_assert(!test_bool[x[i]], "i = %d, x[i] = %d", i, x[i]);
-//         test_bool[x[i]] = true;
-//     }
-//     for(int i = 0 ; i < 500 ; i++){
-//         cr_assert(test_bool[gt[i]->i], "i = %d, gt[i]->i = %d", i, gt[i]->i);
-//         test_bool[gt[i]->i] = false;
-//     }
-// }
-
-// Test(al_suite, multithread_test_4444, .timeout=10){
-//     list1 = new_al(sizeof(test_item_t));
-//     pthread_t threads[NUM_THREADS];
-//     bool test_bool[NUM_THREADS];
-//     int i;
-//     int ret_pthread_create;
-//     int* y;
-
-//     for(i = 0; i < NUM_THREADS; i++){
-//         test_item_list[i] = malloc(sizeof(test_item_t));
-//         y = malloc(sizeof(int));
-//         *y = i;
-//         ret_pthread_create = pthread_create(&threads[i], NULL, test_insert_get_lll, (void*)y);
-
-//         if(ret_pthread_create){
-//             printf("Error: return from pthread_create\n");
-//             exit(-1);
-//         }
-//     }
-//     printf("it goes here\n");
-//     for(int i = 0; i < NUM_THREADS; i++){
-//         pthread_join(threads[i], NULL);
-//     }
-//     for(int i = 0; i < NUM_THREADS; i++){
-//         test_bool[insert_index[i]] = true;
-//     }
-//     for(int i = 0; i < NUM_THREADS; i++){
-//         cr_assert(test_bool[i] == true, "wrong\n");
-//         free(test_item_list[i]);
-//     }
-//     delete_al(list1, NULL);
-// }
+        if(ret_pthread_create){
+            printf("Error: return from pthread_create\n");
+            exit(-1);
+        }
+    }
+    printf("it goes here\n");
+    for(int i = 0; i < NUM_THREADS; i++){
+        pthread_join(threads[i], NULL);
+    }
+    for(int i = 0; i < NUM_THREADS; i++){
+        test_bool[insert_index[i]] = true;
+    }
+    for(int i = 0; i < NUM_THREADS; i++){
+        cr_assert(test_bool[i] == true, "wrong\n");
+        free(test_item_list[i]);
+    }
+    free(list1->base);
+    free(list1);
+    delete_al(list1, NULL);
+}
 
 Test(al_suite, multithread_test_add_delete, .timeout = 10){
     pthread_t threads[5000];
@@ -496,4 +460,42 @@ Test(al_suite, multithread_test_add_delete, .timeout = 10){
     cr_assert(global_list->length == 0, "%-----------zu\n", global_list->length);
 }
 
+Test(al_suite, threads_test_2, .timeout = 40)
+{
+    global_list8 = new_al(sizeof(test_item_t));
 
+    // memset(x, 0, );
+    // student_t *t = calloc(1,sizeof(student_t));
+    pthread_t threads[5000];
+    // bool test_bool[NUM_THREADS];
+    int rc;
+    int i;
+
+    for(i = 0  ; i < 5000; i++)
+    {
+        gt2[i] = malloc(sizeof(test_item_t));
+        int* y = malloc(sizeof(int));
+        *y = i;
+        rc = pthread_create(&threads[i],NULL,test_insert_get2,(void*)y);
+        if (rc)
+        {
+            printf("ERROR; return code from pthread_create() is %d\n", rc);
+            exit(-1);
+       }
+    }
+
+    for(int i = 0 ; i < 5000 ; i++){
+        pthread_join(threads[i],NULL);
+    }
+    // printf("%p\n", global_list8->base);
+    for(int i = 0 ; i < 5000 ; i++){
+        // printf("%d\n", i);
+        //cr_assert(memcmp(gt2[i], w[i], sizeof(test_item_t)) == 0);
+        test_item_t* p = global_list8->base;
+        p += k[i];
+        //cr_assert(memcmp(p, gt2[i], sizeof(test_item_t)) == 0, "i is %d, p->i is %d, and gt2[i]->i is %d\n", i, p->i, gt2[i]->i);
+        //cr_assert(memcmp(p, w[i], sizeof(test_item_t)) == 0);
+
+        cr_assert(memcmp(gt2[i], w[i], sizeof(test_item_t))==0);
+    }
+}
