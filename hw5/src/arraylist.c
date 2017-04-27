@@ -204,10 +204,10 @@ bool remove_data_al(arraylist_t *self, void *data){
 }
 
 void *remove_index_al(arraylist_t *self, size_t index){
+    P(&(self->w));
     void *ret = 0;
     void *base = self->base;
     size_t item_size = self->item_size;
-    P(&(self->w));
     if (index >= self->length){
         void* sour = (void*)(base+(self->length-1)*item_size);
         ret = calloc(1,item_size);
