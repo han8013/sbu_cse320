@@ -1,0 +1,58 @@
+,Points Earned,Total Points,Expected Output,Notes
+Part 1: Builtin Commands,20,20,,
+help,4,4,Prints list of builtins,
+pwd,4,4,Prints current working directory,
+cd /usr/bin,2,2,Changes directory to /usr/bin,
+cd,2,2,Changes directory to the home directory,
+cd .,2,2,Remains in the same directory,
+cd ..,2,2,Changes directory to one directory above the current one,
+inspect the shell prompt,4,4,<netid> : <current directory> $,
+,Points Earned,Total Points,Expected Output,Notes
+Part 2: Executables,21,27,,
+ls,3,3,Lists dir entries,
+[many spaces] ls ,3,3,Same as ls in Bash,
+ls [many spaces] -l,3,3,Same as ls -l in Bash,
+/bin/ls -a,0,3,Same as ls -a in Bash,"<xinhan> : </home/sagnik/hw4_repos_s17/xinhan/hw4/bin> $ /bin/ls -a
+command not found"
+asdf,3,3,Informs user that the command they entered is invalid.,
+grep asdf,0,3,"Starts a grep session which will echo any output containing ""asdf"".","<xinhan> : </home/sagnik/hw4_repos_s17/xinhan/hw4/bin> $ grep asdf
+*** Error in `./sfish': realloc(): invalid next size: 0x0000000000dc85e0 **"
+man 2 fork,3,3,Displays man page for fork. User should be able to interact with it.,
+./writeToOutAndErr,6,6,"Prints ""This should print to stdout."" followed by ""This should print to stderr.""",
+,Points Earned,Total Points,Expected Output,Notes
+Part 3: Redirection,24,30,,
+pwd > temp.txt,3,3,Writes the current working directory to temp.txt,
+ls -a > temp.txt,3,3,Writes the output of ls -a to temp.txt,
+wc -l < temp.txt,3,3,Prints the number of lines in temp.txt,
+cat temp.txt | grep temp,3,3,"Prints to the console ""temp.txt""",
+cat < temp.txt > temp2.txt,6,6,temp2.txt has the same contents as temp.txt,
+ls -R | grep : | wc -c,0,6,Prints a number,Does not work
+yes | grep y,6,6,"Prints a constant stream of ""y"".",
+,Points Earned,Total Points,Expected Output,Notes
+Part 4: Signal Handling,20,20,,
+alarm 4,6,6,"Sets an alarm for 4 seconds. After 4 seconds, the console should print out ""Your 4 second timer has finished!""",
+./longForLoop,8,8,"Upon completion of the process, prints ""Child with PID XXXX has died. It spent YYYY milliseconds utilizing the CPU.""",
+"While the student's program is running, open a new terminal instance, get the student's program's PID. Then execute:    kill -s SIGUSR2 <PID>",6,6,"Prints ""Well that was easy."" to the console.",
+,Points Earned,Total Points,Expected Output,Notes
+EC Part 5: Special Redirection,0,25,,
+./writeToOutAndErr 1> /dev/null,0,2.5,"Prints ""This should print to stderr.""",
+./writeToOutAndErr 2> /dev/null,0,2.5,"Prints ""This should print to stdout.""",
+./writeToOutAndErr &> /dev/null,0,5,Does not produce any output.,
+"./writeToOutAndErr >> newFile.txt
+./writeToOutAndErr >> newFile.txt",0,5,"newFile.txt should contain two copies of the phrase ""This should print to stdout.""",
+"grep a << HJKL
+1234
+asdf
+fdsa
+4321
+HJKL",0,10,"Prints ""asdf"" then ""fdsa"" on two separate lines.",
+,Points Earned,Total Points,Expected Output,Notes
+EC Part 6: Job Control,0,25,,
+./runForever &,0,5,Starts running a program in the backgorund. User should be presented with a command prompt immediately after executing.,
+jobs,0,5,"Prints a table with a list of programs currently running in the background. Table should contain process ID, process arguments and running time. Should only have one entry at this point.",
+fg <PID>,0,5,Brings a process to the foreground. User should not be presented with a prompt unless the program ends.,
+kill <PID>,0,5,Should terminate the process with the given PID. Verify that the process ended by running the jobs command and by checking ps aux | grep <PID>.,
+clone <PID>,0,5,"Should execute a carbon copy of the process with the given PID. That is, all the arguments should be the same. Verify that a new process was created by running the jobs command and by checking ps aux | grep <PID>.",
+,Points Earned,Total Points,,
+Final Score,85,97,,
+EC Score,0,50,,
