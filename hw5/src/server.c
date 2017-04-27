@@ -24,14 +24,14 @@ typedef struct{
 void *thread_insert(void *data);
 void *thread_remove();
 
-test_item *test_list[500];
+test_item *test_list[50];
 sem_t mutex1;
 
 int main(int argc, char *argv[]){
 	global_list_t = new_al(sizeof(test_item));
-	pthread_t tid_list[1000];
+	pthread_t tid_list[100];
 	sem_init(&mutex1,0,0);
-	for (int i = 0; i < 500; ++i){
+	for (int i = 0; i < 50; ++i){
 		test_item* t1 = (test_item*)malloc(sizeof(test_item));
 	    t1->i = i;
 	    t1->f = 1.0*i;
@@ -42,19 +42,33 @@ int main(int argc, char *argv[]){
 	}
 
 
-	for (int i = 0; i < 500; ++i){
-		pthread_t tid1,tid2;
-		Pthread_create(&tid1,NULL,thread_insert,test_list[i]);
-		Pthread_create(&tid2,NULL,thread_remove,NULL);
-		tid_list[i] = tid1;
-		tid_list[i+500] = tid2;
+
+	for (int i = 0; i < 50; ++i){
+		// pthread_t tid1;
+		// Pthread_create(&tid1,NULL,thread_insert,test_list[i]);
+		// tid_list[i] = tid1;
+		size_t index = insert_al(global_list_t, test_list[i]);
+		printf("insert index: %d\n", (int)index);
+
 	}
-	for (int i = 0; i < 500; ++i){
+	printf("Loading data.....\n");
+	sleep(10);
+	for (int i = 0; i < 50; ++i)
+	{
+		pthread_t tid1;
+		Pthread_create(&tid1,NULL,thread_insert,test_list[i]);
+		tid_list[i] = tid1;
+		// pthread_t tid2;
+		// Pthread_create(&tid2,NULL,thread_remove,NULL);
+		// tid_list[i+50] = tid2;
+
+	}
+	for (int i = 0; i < 50; ++i){
 		Pthread_join(tid_list[i],NULL);
-		Pthread_join(tid_list[i+500],NULL);
+		// Pthread_join(tid_list[i+50],NULL);
 	}
 
-	for (int i = 0; i < 500; ++i){
+	for (int i = 0; i < 50; ++i){
 		free(test_list[i]);
 	}
 
@@ -69,20 +83,22 @@ int main(int argc, char *argv[]){
 void *thread_insert(void *data){
 	// printf("basic test\n");
 	// fflush(stdout);
+	printf("The before length is ---------------------%d\n", (int)global_list_t->length);
 	size_t index = insert_al(global_list_t, data);
 	printf("I: begin\n");
 	printf("insert thread return value: %d\n", (int)index);
 	printf("insert thread value: %d\n", (int)(((test_item*)data)->i));
 	int i = 0;
-	sem_getvalue(&mutex1, &i);
+	// sem_getvalue(&mutex1, &i);
+	printf("The current length is ---------------------%d\n", (int)global_list_t->length);
 	printf("I: The mutex number is %d\n", i);
 	fflush(stdout);
-	V(&mutex1);
+	// V(&mutex1);
 	return NULL;
 }
 
 void *thread_remove(){
-	P(&mutex1);
+	// P(&mutex1);
 	printf("R: begin\n");
 	test_item *item = remove_index_al(global_list_t,0);
 	printf("remove thread return value: %d\n", (int)item->i);
