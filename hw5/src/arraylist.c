@@ -86,11 +86,13 @@ arraylist_t *new_al(size_t item_size){
 
 size_t insert_al(arraylist_t *self, void* data){
     size_t ret = UINT_MAX;
+
     if (self==NULL || data == NULL){
         fprintf(stderr, "errno: %d\n", errno);
         return ret;
     }
     P(&mutex);
+
     if (self->length == self->capacity){
         resize_al(self);
     }
@@ -185,10 +187,8 @@ void *remove_index_al(arraylist_t *self, size_t index){
     void *base = self->base;
     size_t item_size = self->item_size;
     P(&mutex);
-
     if (index >= self->length){
-
-        void* sour = (void*)(base+self->length*item_size);
+        void* sour = (void*)(base+(self->length-1)*item_size);
         ret = calloc(1,item_size);
         memcpy(ret,sour,item_size);
     }

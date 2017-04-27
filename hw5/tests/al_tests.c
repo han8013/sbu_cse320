@@ -82,10 +82,8 @@ void* test_insert_get2(void *index)
 void* delete_one_from_list(void* mutex)
 {
     sem_wait(&((sem_struct*)mutex)->mutex_add);
-    printf("remove :%d\n", *(int*)index);
+    // printf("remove :%d\n", *(int*)index);
     remove_index_al(global_list2, 0);
-
-    //sem_post(&(mutex));
     return NULL;
 }
 
@@ -490,7 +488,6 @@ Test(al_suite, multithread_test_add_delete, .timeout = 10){
             exit(-1);
         }
     }
-
     for(int i = 0 ; i < 2500 ; i++){
         pthread_join(threads[i],NULL);
     }
