@@ -98,7 +98,7 @@ void* add_one_to_list(void* mutex)
     int x = 1000;
 
     sem_getvalue(&((sem_struct*)mutex)->mutex_add, &x);
-    printf("add: %d\n", x);
+    // printf("add: %d\n", x);
     return NULL;
 }
 
