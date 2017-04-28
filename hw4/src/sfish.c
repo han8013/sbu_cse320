@@ -56,6 +56,7 @@ void execute(char* cmd, char** tokens){
 	/* check contain slash first*/
 	char *path = strdup(cmd);
 	if (contains_slash(tokens[0])){
+		printf("%s\n", "slash");
 		if (fileExists(tokens[0])==0){
 			fprintf(stderr,"No such file or directory%s\n", tokens[0]);
             return;
@@ -77,8 +78,8 @@ void execute(char* cmd, char** tokens){
 	if ((pid_execu)==0){
 		int execv_return = execv(path,tokens);
 		if (execv_return < 0){
-			fprintf(stderr, "%s\n", "command not found");
-			exit(1);
+			fprintf(stderr, "%s\n", "command not found !!!!");
+			// exit(1);
 		}
 	}
 	else{
@@ -185,7 +186,7 @@ void redirection(char* cmd, char** tokens){
 					if (execv_return<0)
 					{
 						fprintf(stderr, "%s\n", "command not found");
-						exit(1);
+						// exit(1);
 					}
 	    		}
 	    		else{
@@ -227,7 +228,7 @@ void redirection(char* cmd, char** tokens){
 
 				if (execv_return<0){
 					fprintf(stderr, "%s\n", "command not found");
-					exit(1);
+					// exit(1);
 				}
     		}
     		else{
@@ -264,7 +265,7 @@ void redirection(char* cmd, char** tokens){
 			char** commands[] = {pro1_List,pro2_List,pro3_List};
 			pid_t pid;
 			int child_status_pipe;
-			if ((pid=fork())==0){
+			if ((pid=Fork())==0){
 				fork_pipes(size,commands);
 				exit(0);
 			}
@@ -304,7 +305,7 @@ void fork_pipes (int n, char** commands[]){
 void spawn_proc (int in, int out, char** command){
 	pid_t pid;
 
-	if ((pid = fork ()) == 0){
+	if ((pid = Fork ()) == 0){
 	  	if (in != 0){
 	      dup2 (in, 0);
 	      close (in);
@@ -481,7 +482,10 @@ void killHandler(){
 }
 
 void blockHandler(){
-    signal(SIGTSTP, SIG_IGN);
+	sigset_t mask;
+	sigprocmask(0,NULL,&mask);
+	sigdelset(&mask,SIGTSTP);
+
 }
 
 void builtin_pwd(char* cwdbuf){
@@ -576,4 +580,11 @@ void printInfo(){
 	printf("%s\n", "     * cd .. should change the working directory to the parent directory in the directory hierarchy.");
 	printf("%s\n", "pwd: prints the absolute path of the current working directory.");
 	printf("%s\n","================================================================================");
+}
+
+void sig_child(int signum, siginfo_t *siginfo, void *context){
+
+	printf("Child with PID %d has died.", siginfo->si_pid);
+	printf("It spent %lu milliseconds utilizing the CPU.\n", siginfo->si_stime + siginfo->si_utime);
+
 }

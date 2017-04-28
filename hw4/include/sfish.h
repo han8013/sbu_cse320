@@ -23,7 +23,7 @@ void alarmHandler(int s);
 void builtin_alarm(char* s);
 void killHandler();
 void blockHandler();
-
+void sig_child();
 
 
 pid_t Fork();
@@ -50,3 +50,4 @@ char** parsePathevn(char *PATH, char** pathList, char* delim);
 int parseLine(char* cmd, char** argv);
 void changePrompt(char* shellPrompt);
 void printInfo();
+
