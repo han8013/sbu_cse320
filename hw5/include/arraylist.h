@@ -23,9 +23,19 @@ typedef struct{
     void* base;
     /* END: .. add locks, other fields BELOW THIS COMMENT if needed .. */
     int readcnt;
+    int foreachCnt;
     sem_t mutex;
     sem_t w;
+    sem_t for_mutex;
+    sem_t insert;
 }arraylist_t;
+
+typedef struct{
+
+	arraylist_t *t;
+	size_t index;
+
+}thread_value;
 
 arraylist_t *new_al(size_t item_size);
 

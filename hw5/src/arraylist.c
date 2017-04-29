@@ -39,9 +39,6 @@
 //     unix_error("V error");
 // }
 
-sem_t mutex;
-sem_t w;
-int readcnt;
 
 static bool resize_al(arraylist_t* self){
     bool ret = false;
@@ -90,11 +87,11 @@ arraylist_t *new_al(size_t item_size){
 
 size_t insert_al(arraylist_t *self, void* data){
     size_t ret = UINT_MAX;
-
     if (self==NULL || data == NULL){
         fprintf(stderr, "errno: %d\n", errno);
         return ret;
     }
+    // sem_wait(&self->insert);
     P(&(self->w));
     if (self->length == self->capacity){
         resize_al(self);
@@ -104,6 +101,7 @@ size_t insert_al(arraylist_t *self, void* data){
     ret = self->length;
     self->length++;
     V(&(self->w));
+    // sem_post(&self->insert);
     return ret;
 }
 
@@ -233,5 +231,8 @@ void *remove_index_al(arraylist_t *self, size_t index){
 }
 
 void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
-    return;
+    for (int i = 0; i < self->length; ++i){
+        void *t = self->base+i*self->item_size;
+        (*free_item_func)(t);
+    }
 }
