@@ -5,6 +5,7 @@
 #include <string.h>
 #include <semaphore.h>
 #include "csapp.h"
+
 /**
  * @visibility HIDDEN FROM USER
  * @return     true on success, false on failure
@@ -39,6 +40,8 @@
 //     unix_error("V error");
 // }
 
+
+int errno;
 
 static bool resize_al(arraylist_t* self){
     bool ret = false;
@@ -80,6 +83,7 @@ arraylist_t *new_al(size_t item_size){
         ret = arraylist;
         Sem_init(&(arraylist->mutex),0,1);
         Sem_init(&(arraylist->w),0,1);
+        sem_init(&(arraylist->d),0,1);
         arraylist->readcnt = 0;
         return ret;
     }
@@ -91,7 +95,7 @@ size_t insert_al(arraylist_t *self, void* data){
         fprintf(stderr, "errno: %d\n", errno);
         return ret;
     }
-    // sem_wait(&self->insert);
+
     P(&(self->w));
     if (self->length == self->capacity){
         resize_al(self);
@@ -101,7 +105,7 @@ size_t insert_al(arraylist_t *self, void* data){
     ret = self->length;
     self->length++;
     V(&(self->w));
-    // sem_post(&self->insert);
+
     return ret;
 }
 
@@ -114,6 +118,7 @@ size_t get_data_al(arraylist_t *self, void *data){
     self->readcnt++;
     if (self->readcnt==1){
         P(&(self->w));
+        P(&(self->d));
     }
     V(&(self->mutex));
     ret = UINT_MAX;
@@ -127,6 +132,7 @@ size_t get_data_al(arraylist_t *self, void *data){
     self->readcnt--;
     if (self->readcnt==0){
         V(&(self->w));
+        V(&(self->d));
     }
     V(&(self->mutex));
     return ret;
@@ -138,6 +144,7 @@ void *get_index_al(arraylist_t *self, size_t index){
     self->readcnt++;
     if (self->readcnt==1){
         P(&(self->w));
+        P(&(self->d));
     }
     V(&(self->mutex));
     ret = calloc(1,self->item_size);
@@ -153,6 +160,7 @@ void *get_index_al(arraylist_t *self, size_t index){
     self->readcnt--;
     if (self->readcnt==0){
         V(&(self->w));
+        V(&(self->d));
     }
     V(&(self->mutex));
     return ret;
@@ -166,7 +174,7 @@ bool remove_data_al(arraylist_t *self, void *data){
     else{
         void *base = self->base;
         size_t item_size = self->item_size;
-        P(&(self->w));
+        P(&(self->d));
         if (data == NULL){
             /* revove first one */
             for (int i = 1; i < self->length; ++i){
@@ -197,12 +205,12 @@ bool remove_data_al(arraylist_t *self, void *data){
         }
         ret = true;
     }
-    V(&(self->w));
+    V(&(self->d));
     return ret;
 }
 
 void *remove_index_al(arraylist_t *self, size_t index){
-    P(&(self->w));
+    P(&(self->d));
     void *ret = 0;
     void *base = self->base;
     size_t item_size = self->item_size;
@@ -226,13 +234,19 @@ void *remove_index_al(arraylist_t *self, size_t index){
     if (self->length == (self->capacity/2) - 1){
         resize_al(self);
     }
-    V(&(self->w));
+    V(&(self->d));
     return ret;
 }
 
 void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
-    for (int i = 0; i < self->length; ++i){
-        void *t = self->base+i*self->item_size;
-        (*free_item_func)(t);
+    P(&(self->d));
+
+    if (free_item_func!=NULL && self!=NULL){
+        for (int i = 0; i < self->length; ++i){
+            void *t = self->base+i*self->item_size;
+            (*free_item_func)(t);
+        }
     }
+    V(&(self->d));
+
 }

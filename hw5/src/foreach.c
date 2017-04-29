@@ -24,55 +24,65 @@ void *foreach_init(arraylist_t *self){
         value->index = 0;
         value->t = self;
         sem_init(&(self->for_mutex),0,1);
-        sem_init(&(self->insert),0,1);
         self->foreachCnt = 0;
-    }
+        printf("once:\n");
 
+    }
+    printf("foreach ini:\n");
     sem_wait(&self->for_mutex);
     self->foreachCnt++;
     if (self->foreachCnt==1){
-        sem_wait(&self->insert);
+        sem_wait(&self->d);
     }
     sem_post(&self->for_mutex);
 
     void *ret = self->base + (value->index)*self->item_size;
-
-    sem_wait(&self->for_mutex);
-    self->foreachCnt++;
-    if (self->foreachCnt==0){
-        sem_post(&self->insert);
-    }
-    sem_post(&self->for_mutex);
+    printf("end of ini:\n");
+    // sem_wait(&self->for_mutex);
+    // self->foreachCnt++;
+    // if (self->foreachCnt==0){
+    //     sem_post(&self->d);
+    // }
+    // sem_post(&self->for_mutex);
     return ret;
 }
 
 void *foreach_next(arraylist_t *self, void* data){
-    sem_wait(&self->for_mutex);
-    self->foreachCnt++;
-    if (self->foreachCnt==1){
-        sem_wait(&self->insert);
-    }
-    sem_post(&self->for_mutex);
-
+    // sem_wait(&self->for_mutex);
+    // self->foreachCnt++;
+    // if (self->foreachCnt==1){
+    //     sem_wait(&self->insert);
+    // }
+    // sem_post(&self->for_mutex);
+    printf("start next:\n");
     size_t index = foreach_index();
     if (index <= self->length){
+        if (data!=NULL){
+            memcpy(self->base + index*self->item_size,data,self->item_size);
+        }
+        thread_value *value = pthread_getspecific(thread_key);
+        value->index++;
         void *ret = calloc(1,self->item_size);
         memcpy(ret,self->base + index*self->item_size,self->item_size);
-        sem_wait(&self->for_mutex);
-        self->foreachCnt++;
-        if (self->foreachCnt==0){
-            sem_post(&self->insert);
-        }
-        sem_post(&self->for_mutex);
+        // sem_wait(&self->for_mutex);
+        // self->foreachCnt++;
+        // if (self->foreachCnt==0){
+        //     sem_post(&self->insert);
+        // }
+        // sem_post(&self->for_mutex);
+        printf("end next:\n");
+
         return ret;
     }
     else{
-        sem_wait(&self->for_mutex);
-        self->foreachCnt++;
-        if (self->foreachCnt==0){
-            sem_post(&self->insert);
-        }
-        sem_post(&self->for_mutex);
+        // sem_wait(&self->for_mutex);
+        // self->foreachCnt++;
+        // if (self->foreachCnt==0){
+        //     sem_post(&self->insert);
+        // }
+        // sem_post(&self->for_mutex);
+        printf("end of loop:\n");
+        foreach_break_f();
         return NULL;
     }
 }
@@ -84,11 +94,18 @@ size_t foreach_index(){
 }
 
 bool foreach_break_f(){
-    bool ret = false;
+    printf("start break:\n");
     thread_value *v = pthread_getspecific(thread_key);
+    arraylist_t *self = v->t;
+    sem_wait(&self->for_mutex);
+    self->foreachCnt++;
+    if (self->foreachCnt==0){
+        sem_post(&self->d);
+    }
+    sem_post(&self->for_mutex);
     free(v);
-    ret = true;
-    return ret;
+    printf("end of break:\n");
+    return true;
 }
 
 int32_t apply(arraylist_t *self, int32_t (*application)(void*)){

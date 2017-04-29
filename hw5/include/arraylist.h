@@ -27,7 +27,7 @@ typedef struct{
     sem_t mutex;
     sem_t w;
     sem_t for_mutex;
-    sem_t insert;
+    sem_t d;
 }arraylist_t;
 
 typedef struct{
@@ -37,6 +37,7 @@ typedef struct{
 
 }thread_value;
 
+extern int errno;
 arraylist_t *new_al(size_t item_size);
 
 size_t insert_al(arraylist_t *self, void* data);
