@@ -2,14 +2,17 @@
 #include "arraylist.h"
 #include "foreach.h"
 #include "csapp.h"
+#include "foreach.h"
 
 arraylist_t *global_list_t;
-
+#ifndef NUM_THREADS
+#define NUM_THREADS 50
+#endif
 typedef struct {
     char* name;
     int32_t id;
     double gpa;
-}student;
+}student_t;
 
 typedef struct{
     int i;
@@ -27,89 +30,109 @@ void *thread_remove();
 test_item *test_list[50];
 sem_t mutex1;
 
-int main(int argc, char *argv[]){
-	global_list_t = new_al(sizeof(test_item));
-	pthread_t tid_list[100];
-	sem_init(&mutex1,0,0);
-	for (int i = 0; i < 50; ++i){
-		test_item* t1 = (test_item*)malloc(sizeof(test_item));
-	    t1->i = i;
-	    t1->f = 1.0*i;
-	    t1->ld = 2.0*i;
-	    t1->c1 = t1->c2 = i;
-	    test_list[i] = t1;
-	    // printf("assign value: %d\n", test_list[i]->i);
-	}
+typedef struct{
+int* i;
+arraylist_t* al;
+}mt_fe_t1_struct1;
 
+#ifndef TEMP1
+#define TEMP1 500
+#endif
 
+#ifndef TEMP2
+#define TEMP2 50
+#endif
 
-	for (int i = 0; i < 50; ++i){
-		// pthread_t tid1;
-		// Pthread_create(&tid1,NULL,thread_insert,test_list[i]);
-		// tid_list[i] = tid1;
-		size_t index = insert_al(global_list_t, test_list[i]);
-		printf("insert index: %d\n", (int)index);
+typedef struct{
+int* i;
+arraylist_t* al;
+}mt_fe_t1_struct;
 
-	}
-	printf("Loading data.....\n");
-	sleep(10);
-	for (int i = 0; i < 50; ++i)
-	{
-		pthread_t tid1;
-		Pthread_create(&tid1,NULL,thread_insert,test_list[i]);
-		tid_list[i] = tid1;
-		// pthread_t tid2;
-		// Pthread_create(&tid2,NULL,thread_remove,NULL);
-		// tid_list[i+50] = tid2;
-
-	}
-	for (int i = 0; i < 50; ++i){
-		Pthread_join(tid_list[i],NULL);
-		// Pthread_join(tid_list[i+50],NULL);
-	}
-
-	for (int i = 0; i < 50; ++i){
-		free(test_list[i]);
-	}
-
-	/* check result */
-	size_t r = global_list_t->length;
-	printf("Final result: %d\n", (int)r);
-	free(global_list_t->base);
-	free(global_list_t);
-	exit(0);
+void* mt_fe_t1_func(void* index){
+    mt_fe_t1_struct* new_struct = ((mt_fe_t1_struct*)index);
+    int i = *(new_struct->i);
+    printf("HI, i = %d\n", i);
+    fflush(stdout);
+    arraylist_t* al = new_struct->al;
+    free(new_struct->i);
+    free(index);
+    printf("See, i = %d\n", i);
+    bool b = false;
+    foreach(student_t, value, al){
+        if(b)
+            value->id = i + 1;
+        else
+            value = NULL;
+        b = !b;
+    }
+    // cr_assert(true);
+    printf("Bye, i = %d\n", i);
+    return NULL;
 }
 
-void *thread_insert(void *data){
-	// printf("basic test\n");
-	// fflush(stdout);
-	printf("The before length is ---------------------%d\n", (int)global_list_t->length);
-	size_t index = insert_al(global_list_t, data);
-	printf("I: begin\n");
-	printf("insert thread return value: %d\n", (int)index);
-	printf("insert thread value: %d\n", (int)(((test_item*)data)->i));
-	int i = 0;
-	// sem_getvalue(&mutex1, &i);
-	printf("The current length is ---------------------%d\n", (int)global_list_t->length);
-	printf("I: The mutex number is %d\n", i);
-	fflush(stdout);
-	// V(&mutex1);
-	return NULL;
+typedef struct{
+    int i;
+    float f;
+    long double ld;
+    char c1:4;
+    char c2:4;
+    short s;
+    void *some_data;
+}test_item_t;
+
+test_item_t* struct_list[NUM_THREADS];
+arraylist_t* list1;
+
+void* test_remove_index(void *index)
+{
+    int y = *((int*)index);
+    free(index);
+    struct_list[y]->i = y;
+    insert_al(list1,struct_list[y]);
+
+    if(struct_list[y]->i % 2 != 0){
+        int x = get_data_al(list1, struct_list[y]);
+        remove_index_al(list1,x);
+    }
+
+    return NULL;
 }
 
-void *thread_remove(){
-	// P(&mutex1);
-	printf("R: begin\n");
-	test_item *item = remove_index_al(global_list_t,0);
-	printf("remove thread return value: %d\n", (int)item->i);
-	free(item);
+int main(int argc, char* argv[]){
+    list1 = new_al(sizeof(test_item_t));
 
-	int index = 0;
-	printf("SGFT\n");
-	fflush(stdout);
-	sem_getvalue(&mutex1, &index);
-	printf("R: The mutex number is %d\n", index);
-	fflush(stdout);
-	return NULL;
+    pthread_t threads[NUM_THREADS];
+    //bool test_bool[NUM_THREADS];
+    int thread_child;
+    int i;
+
+    for(i = 0  ; i < NUM_THREADS; i++)
+    {
+        struct_list[i] = malloc(sizeof(test_item_t));
+        int* y = malloc(sizeof(int));
+        *y = i;
+        thread_child = pthread_create(&threads[i],NULL,test_remove_index,(void*)y);
+        if (thread_child)
+        {
+            printf("ERROR; return code from pthread_create() is %d\n", thread_child);
+            exit(-1);
+        }
+    }
+    for(int i = 0 ; i < NUM_THREADS ; i++)
+    {
+        pthread_join(threads[i],NULL);
+    }
+
+    for(int i = 0 ; i < NUM_THREADS/2 ; i++)
+    {
+        printf("left %d\n", ((test_item_t*)((char*)list1->base + (i*list1->item_size))) -> i);
+        fflush(stdout);
+        //cr_assert(((test_item_t*)((char*)list1->base + (i*list1->item_size))) -> i %2 == 0, "error");
+    }
 }
+
+
+
+
+
 

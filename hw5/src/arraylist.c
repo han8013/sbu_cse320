@@ -5,44 +5,8 @@
 #include <string.h>
 #include <semaphore.h>
 #include "csapp.h"
-/**
- * @visibility HIDDEN FROM USER
- * @return     true on success, false on failure
- */
-// void unix_error(char *msg);
-// /* POSIX semaphore wrappers */
-// void Sem_init(sem_t *sem, int pshared, unsigned int value);
-// void P(sem_t *sem);
-// void V(sem_t *sem);
 
-// void unix_error(char *msg) /* Unix-style error */
-// {
-//     fprintf(stderr, "%s: %s\n", msg, strerror(errno));
-//     exit(0);
-// }
-
-// void Sem_init(sem_t *sem, int pshared, unsigned int value)
-// {
-//     if (sem_init(sem, pshared, value) < 0)
-//     unix_error("Sem_init error");
-// }
-
-// void P(sem_t *sem)
-// {
-//     if (sem_wait(sem) < 0)
-//     unix_error("P error");
-// }
-
-// void V(sem_t *sem)
-// {
-//     if (sem_post(sem) < 0)
-//     unix_error("V error");
-// }
-
-sem_t mutex;
-sem_t w;
-int readcnt;
-
+int errno;
 static bool resize_al(arraylist_t* self){
     bool ret = false;
     size_t length = self->length;
@@ -62,7 +26,6 @@ static bool resize_al(arraylist_t* self){
         if (capacity/2>=INIT_SZ){
             self->capacity = capacity/2;
         }
-
         ret = true;
     }
     return ret;
@@ -71,7 +34,7 @@ static bool resize_al(arraylist_t* self){
 arraylist_t *new_al(size_t item_size){
     void *ret = NULL;
     if (item_size<=0){
-        fprintf(stderr, "Value of errno: %d\n", errno);
+        errno = ENOMEM;
         return ret;
     }
     else{
@@ -83,6 +46,9 @@ arraylist_t *new_al(size_t item_size){
         ret = arraylist;
         Sem_init(&(arraylist->mutex),0,1);
         Sem_init(&(arraylist->w),0,1);
+        Sem_init(&(arraylist->d),0,1);
+        Sem_init(&(arraylist->for_mutex),0,1);
+        arraylist->foreachCnt = 0;
         arraylist->readcnt = 0;
         return ret;
     }
@@ -90,9 +56,8 @@ arraylist_t *new_al(size_t item_size){
 
 size_t insert_al(arraylist_t *self, void* data){
     size_t ret = UINT_MAX;
-
     if (self==NULL || data == NULL){
-        fprintf(stderr, "errno: %d\n", errno);
+        errno = ENOMEM;
         return ret;
     }
     P(&(self->w));
@@ -108,13 +73,15 @@ size_t insert_al(arraylist_t *self, void* data){
 }
 
 size_t get_data_al(arraylist_t *self, void *data){
-    size_t ret = 0;
+    size_t ret = UINT_MAX;
     if (data==NULL){
+        errno=EINVAL;
         return ret;
     }
     P(&(self->mutex));
     self->readcnt++;
     if (self->readcnt==1){
+        P(&(self->d));
         P(&(self->w));
     }
     V(&(self->mutex));
@@ -129,17 +96,26 @@ size_t get_data_al(arraylist_t *self, void *data){
     self->readcnt--;
     if (self->readcnt==0){
         V(&(self->w));
+        V(&(self->d));
+
     }
     V(&(self->mutex));
+
     return ret;
 }
 
 void *get_index_al(arraylist_t *self, size_t index){
     void *ret = NULL;
+    if (self->length == 0 ){
+        errno = EINVAL;
+        return ret;
+    }
     P(&(self->mutex));
     self->readcnt++;
     if (self->readcnt==1){
+        P(&(self->d));
         P(&(self->w));
+
     }
     V(&(self->mutex));
     ret = calloc(1,self->item_size);
@@ -151,24 +127,28 @@ void *get_index_al(arraylist_t *self, size_t index){
         void* sour = (self->base+index*self->item_size);
         memcpy(ret,sour,self->item_size);
     }
+
     P(&(self->mutex));
     self->readcnt--;
     if (self->readcnt==0){
         V(&(self->w));
+        V(&(self->d));
     }
     V(&(self->mutex));
+
     return ret;
 }
 
 bool remove_data_al(arraylist_t *self, void *data){
     bool ret = false;
     if (self->length ==0 ){
+        errno = EINVAL;
         return ret;
     }
     else{
+        P(&(self->d));
         void *base = self->base;
         size_t item_size = self->item_size;
-        P(&(self->w));
         if (data == NULL){
             /* revove first one */
             for (int i = 1; i < self->length; ++i){
@@ -183,6 +163,7 @@ bool remove_data_al(arraylist_t *self, void *data){
                 void *temp = (void*)(base+i*item_size);
                 if (memcmp(temp,data,self->item_size)==0){
                     j = i;
+                    ret = true;
                 }
             }
             for (j = 1; j < self->length; ++j){
@@ -193,18 +174,20 @@ bool remove_data_al(arraylist_t *self, void *data){
         }
         self->length--;
         if (self->length == (self->capacity/2) - 1){
-            // P(&mutex);
             resize_al(self);
-            // V(&mutex);
         }
-        ret = true;
+        // ret = true;
     }
-    V(&(self->w));
+    V(&(self->d));
     return ret;
 }
 
 void *remove_index_al(arraylist_t *self, size_t index){
-    P(&(self->w));
+    if (self->length==0){
+        errno = EINVAL;
+        return NULL;
+    }
+    P(&(self->d));
     void *ret = 0;
     void *base = self->base;
     size_t item_size = self->item_size;
@@ -228,10 +211,22 @@ void *remove_index_al(arraylist_t *self, size_t index){
     if (self->length == (self->capacity/2) - 1){
         resize_al(self);
     }
-    V(&(self->w));
+
+    V(&(self->d));
     return ret;
 }
 
 void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
-    return;
+    P(&(self->w));
+    if (free_item_func!=NULL && self!=NULL){
+        for (int i = 0; i < self->length; ++i){
+            void *t = self->base+i*self->item_size;
+            (*free_item_func)(t);
+        }
+    }
+    else{
+        errno = EINVAL;
+    }
+    V(&(self->w));
 }
+
