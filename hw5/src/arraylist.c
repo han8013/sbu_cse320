@@ -140,13 +140,13 @@ void *get_index_al(arraylist_t *self, size_t index){
 }
 
 bool remove_data_al(arraylist_t *self, void *data){
+    P(&(self->d));
     bool ret = false;
     if (self->length ==0 ){
         errno = EINVAL;
         return ret;
     }
     else{
-        P(&(self->d));
         void *base = self->base;
         size_t item_size = self->item_size;
         if (data == NULL){
@@ -183,11 +183,11 @@ bool remove_data_al(arraylist_t *self, void *data){
 }
 
 void *remove_index_al(arraylist_t *self, size_t index){
+    P(&(self->d));
     if (self->length==0){
         errno = EINVAL;
         return NULL;
     }
-    P(&(self->d));
     void *ret = 0;
     void *base = self->base;
     size_t item_size = self->item_size;
@@ -217,7 +217,7 @@ void *remove_index_al(arraylist_t *self, size_t index){
 }
 
 void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
-    P(&(self->w));
+    P(&(self->d));
     if (free_item_func!=NULL && self!=NULL){
         for (int i = 0; i < self->length; ++i){
             void *t = self->base+i*self->item_size;
@@ -227,6 +227,6 @@ void delete_al(arraylist_t *self, void (*free_item_func)(void*)){
     else{
         errno = EINVAL;
     }
-    V(&(self->w));
+    V(&(self->d));
 }
 
