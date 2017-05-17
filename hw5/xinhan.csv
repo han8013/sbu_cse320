@@ -1,0 +1,45 @@
+Tests,Points,OutOf,Notes
+24_ForEach_Multi_Thread_Insert,4,4,
+23_ForEach_Multi_Thread_Delete_Break,4,4,
+22_ForEach_Multi_Thread_Delete,0,4,['The test timed out.']
+21_ForEachApply_Multi_Thread,0,2,['The test crashed.']
+20_ForEachApply_Multi_Thread_Failure,0,2,['The test crashed.']
+19_ForEachApply_Single_Thread_Failure,0,2,['The test crashed.']
+18_ForEachApply_Multi_Thread,0,2,['The test crashed.']
+17_ForEachApply_Single_Thread,0,2,['The test crashed.']
+16_ForEachBreak_Multi_Thread,0,1,"['16_test.c:32: THREAD[3]: No reset after break', '16_test.c:32: THREAD[1]: No reset after break', '16_test.c:32: THREAD[2]: No reset after break']"
+15_ForEachBreak_Single_Thread,0,1,['15_test.c:35: No reset after break']
+14_ForEachIndex_Single_Thread_Uninitialized,0,1,['The test crashed.']
+13_ForEachIndex_Multi_Thread,2,2,
+12_ForEachIndex_Single_Thread,2,2,
+11_ForEachNext_Multi_Thread_EOL_Update,2,2,
+10_ForEachNext_Single_Thread_EOL_No_Update,2,2,
+09_ForEachNext_Multi_Thread_Next_Item_No_Update,2,2,
+08_ForEachNext_Single_Thread_Next_Item_No_Update,2,2,
+07_ForEachNext_Multi_Thread_EOL_Update,2,2,
+06_ForEachNext_Single_Thread_EOL_Update,2,2,
+05_ForEachNext_Multi_Thread_Next_Item_Update,2,2,
+04_ForEachNext_Single_Thread_Next_Item_Update,2,2,
+03_ForEachInit_Multi_Thread_Barrier_Populated_List,0,2,"['03_test.c:29: THREAD[25]: Expected a copy, got actual arraylist data', '03_test.c:29: THREAD[7]: Expected a copy, got actual arraylist data', '03_test.c:29: THREAD[5]: Expected a copy, got actual arraylist data', '03_test.c:29: THREAD[3]: Expected a copy, got actual arraylist data']"
+02_ForEachInit_Multi_Thread_Populated_List,0,2,['The test crashed.']
+01_ForEachInit_Single_Thread_Populated_List,0,1,"['01_test.c:30: Expected a copy, got actual arraylist data']"
+19_al_resize_list_smaller,0,2,['19_test.c:44: Remove last item failed']
+18_al_resize_list_larger,2,2,
+17_al_mt_insert_delete_II,4,4,
+16_al_mt_insert_delete_II,4,4,
+15_al_mt_insert_delete_I,4,4,
+14_al_mt_alphabet_insert,4,4,
+13_al_mt_single_insert,4,4,
+12_al_delete_stress_test,4,4,
+11_al_insert_stress_test,4,4,
+10_al_remove_first,2,2,
+09_al_remove_null,2,2,
+08_al_get_null_data,0,2,['08_test.c:33: get_data_al when called with data == NULL should return first item RECEIVED: 4294967295']
+07_al_get_invalid_data,2,2,
+06_al_get_invalid,2,2,
+05_al_delete_data,2,2,
+04_al_retrieve_data,2,2,
+03_al_insert_invalid,1,1,
+02_al_insert_valid,2,2,
+01_al_init,1,1,
+Total,74,100,
